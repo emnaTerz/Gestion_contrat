@@ -55,9 +55,9 @@ public class JwtServiceImpl implements JwtService {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
-
-    private boolean isTokenExpired(String token) {
-        return extractClaim(token, Claims::getExpiration).before(new Date());
+    @Override
+    public boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
     }
     @Override
     public String getTokenFromRequest(HttpServletRequest request) {
@@ -74,5 +74,9 @@ public class JwtServiceImpl implements JwtService {
     private Key getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSigningKey);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+    @Override
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
     }
 }

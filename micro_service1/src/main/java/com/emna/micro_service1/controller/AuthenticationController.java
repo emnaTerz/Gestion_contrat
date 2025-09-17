@@ -45,30 +45,6 @@ public class AuthenticationController {
 
 
 
-
-    @PostMapping("/signup")
-    public ResponseEntity<?> signup(
-            @RequestBody SignUpRequest request,
-            HttpServletRequest httpRequest) {
-
-        try {
-
-
-            // Créer le nouvel utilisateur
-            authenticationService.signup(request);
-            System.out.println("User registration successful.");
-
-           // userActionService.logUserAction(username, "l'utilisateur:" + username + " a créer l'utilisateur: " + request.getEmail(), "/createUser" , "POST");
-
-            //  Retourner la réponse
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("User created successfully.");
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Registration failed: " + e.getMessage());
-        }
-    }
     @PostMapping("/signin")
   public ResponseEntity<?> signin(@RequestBody SigninRequest request) {
       try {
@@ -184,6 +160,60 @@ public class AuthenticationController {
     } catch (Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
     }}
+
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(
+            @RequestBody SignUpRequest request,
+            HttpServletRequest httpRequest) {
+
+        try {
+            // 1️⃣ Validation du token
+            String token = jwtService.getTokenFromRequest(httpRequest);
+            if (token == null) {
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Missing or invalid token."));
+            }
+
+            String username = jwtService.extractUserName(token);
+            if (!jwtService.isTokenValid(token, new UserDetailsImpl(username))) {
+                return ResponseEntity
+                        .status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "Invalid token."));
+            }
+
+            // 2️⃣ Créer le nouvel utilisateur
+            authenticationService.signup(request);
+            System.out.println("User registration successful.");
+
+            // 3️⃣ Ajouter dans l'historique
+            userActionService.logUserAction(
+                    username,
+                    "L'utilisateur " + username + " a créé un nouvel utilisateur : " + request.getEmail(),
+                    "/signup",
+                    "POST"
+            );
+
+            // 4️⃣ Retourner une réponse JSON standardisée
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(Map.of("message", "User created successfully."));
+
+        } catch (ExpiredJwtException e) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Token has expired, please log in again."));
+        } catch (MalformedJwtException e) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Invalid token format."));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "Registration failed: " + e.getMessage()));
+        }
+    }
 
 
     @DeleteMapping("/{id}")
