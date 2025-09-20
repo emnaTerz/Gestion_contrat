@@ -11,6 +11,7 @@ public interface JwtService {
     String generateToken(UserDetails userDetails);
 
     boolean isTokenValid(String token, UserDetails userDetails);
+    boolean isTokenValid(String token, String username);
     String generateToken(Map<String, Object> extraClaims, UserDetails userDetails);
     String getTokenFromRequest(HttpServletRequest request); // Ajout de cette méthode
     Date extractExpiration(String token);
