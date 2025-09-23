@@ -1,6 +1,7 @@
 package com.emna.micro_service1.service.impl;
 
 import com.emna.jwt_service.Service.JwtService;
+import com.emna.micro_service1.DTO.ResetPasswordDTO;
 import com.emna.micro_service1.dao.request.SignUpRequest;
 import com.emna.micro_service1.dao.request.SigninRequest;
 import com.emna.micro_service1.dao.response.JwtAuthenticationResponse;
@@ -66,6 +67,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             e.printStackTrace();
             throw e;
         }
+    }
+    @Override
+    public void resetPassword(ResetPasswordDTO dto) {
+        User user = userRepository.findById(dto.userId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + dto.userId()));
+
+        user.setPassword(passwordEncoder.encode(dto.newPassword()));
+        userRepository.save(user);
     }
 
 

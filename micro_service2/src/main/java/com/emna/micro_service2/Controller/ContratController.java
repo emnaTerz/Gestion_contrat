@@ -8,7 +8,9 @@ import com.emna.micro_service2.dto.Responses.ContratResponseDTO;
 import com.emna.micro_service2.entities.Contrat;
 import com.emna.micro_service2.Service.ContratService;
 import com.emna.micro_service2.entities.HistoriqueContrat;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,11 +64,12 @@ public class ContratController {
         contratService.unlockContrat(numPolice, request, cancelled, startTime);
         return ResponseEntity.ok("Contrat déverrouillé");
     }
-    @PostMapping("/lock/{numPolice}")
-    public ResponseEntity<Void> lockContrat(@PathVariable String numPolice, HttpServletRequest request) throws Exception {
-        contratService.lockContrat(numPolice, request);
-        return ResponseEntity.ok().build();
+    @PostMapping("/lock/{id}")
+    public ResponseEntity<?> lockContrat(@PathVariable String id, HttpServletRequest request) throws Exception {
+        Contrat contrat = contratService.lockContrat(id, request);
+        return ResponseEntity.ok(contrat);
     }
+
 
 
     @GetMapping("/exists/{numPolice}")
@@ -87,5 +90,17 @@ public class ContratController {
         // -------------------- HISTORIQUE --------------------
         List<HistoriqueContrat> historique = historiqueContratService.getAllHistorique();
         return ResponseEntity.ok(historique);
+    }
+
+    @DeleteMapping("/historique/{id}")
+    public ResponseEntity<Void> deleteHistorique(@PathVariable Long id) {
+        try {
+            historiqueContratService.deleteHistoriqueById(id);
+            return ResponseEntity.ok().build();
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

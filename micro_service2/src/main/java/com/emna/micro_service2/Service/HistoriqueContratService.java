@@ -2,8 +2,10 @@ package com.emna.micro_service2.Service;
 
 import com.emna.micro_service2.entities.HistoriqueContrat;
 import com.emna.micro_service2.Repository.HistoriqueContratRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,5 +34,12 @@ public class HistoriqueContratService {
 
     public List<HistoriqueContrat> getAllHistorique() {
         return historiqueContratRepository.findAll();
+    }
+
+    @Transactional
+    public void deleteHistoriqueById(Long id) {
+        HistoriqueContrat historique = historiqueContratRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Historique introuvable avec id " + id));
+        historiqueContratRepository.delete(historique);
     }
 }

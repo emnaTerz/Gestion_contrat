@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ContratService {
@@ -153,57 +154,124 @@ public class ContratService {
         return contrat;
     }
 
-
-    // ------------------- MODIFICATION -------------------
     @Transactional
     public Contrat modifierContrat(ContratDTO dto, HttpServletRequest request) throws Exception {
         String username = validateTokenAndGetUser(request);
 
-        Contrat contrat = getContratLockedByUser(dto.getNumPolice(), username);
+        // 1️⃣ Récupérer le contrat existant
+        Contrat contrat = contratRepository.findById(dto.getNumPolice())
+                .orElseThrow(() -> new Exception("Contrat introuvable"));
 
-        // Mise à jour des champs
+        // 2️⃣ Vérifier verrou
+        if (contrat.getEditingUser() != null && !contrat.getEditingUser().equals(username)) {
+            throw new Exception("Ce contrat est actuellement modifié par un autre utilisateur : " + contrat.getEditingUser());
+        }
+        contrat.setEditingUser(username);
+        contrat.setEditingStart(LocalDateTime.now());
+        contratRepository.save(contrat);
+
+        // 3️⃣ Mettre à jour les champs simples
         mapDtoToEntity(dto, contrat);
         contratRepository.save(contrat);
 
-        // Historique avec temps de réalisation
+        // 4️⃣ Supprimer les anciennes sections, garanties et exclusions
+        List<Section> anciennesSections = sectionRepository.findByContrat_NumPolice(contrat.getNumPolice());
+        for (Section sec : anciennesSections) {
+            List<GarantieSection> garanties = garantieSectionRepository.findBySection_Id(sec.getId());
+            for (GarantieSection g : garanties) {
+                List<ExclusionGarantie> exclusions = exclusionGarantieRepository.findByGarantieSection_Id(g.getId());
+                exclusionGarantieRepository.deleteAll(exclusions);
+            }
+            garantieSectionRepository.deleteAll(garanties);
+        }
+        sectionRepository.deleteAll(anciennesSections);
+
+        // 5️⃣ Créer les nouvelles sections et garanties
+        for (SectionDTO sDto : dto.getSections()) {
+            Section section = new Section();
+            section.setIdentification(sDto.getIdentification());
+            section.setAdresse(sDto.getAdresse());
+            section.setNatureConstruction(sDto.getNatureConstruction());
+            section.setContiguite(sDto.getContiguite());
+            section.setAvoisinage(sDto.getAvoisinage());
+            section.setContrat(contrat);
+            sectionRepository.save(section);
+
+            for (GarantieSectionDTO gDto : sDto.getGaranties()) {
+                GarantieSection garantie = new GarantieSection();
+                garantie.setFranchise(gDto.getFranchise());
+                garantie.setSection(section);
+
+                // ⚡ Récupérer l'entité SousGarantie depuis l'ID
+                SousGarantie sousGarantie = sousGarantieRepository.findById(gDto.getSousGarantieId())
+                        .orElseThrow(() -> new Exception("SousGarantie introuvable"));
+                garantie.setSousGarantie(sousGarantie);
+
+                garantie.setLimite(gDto.getLimite());
+                garantie.setMaximum(gDto.getMaximum());
+                garantie.setMinimum(gDto.getMinimum());
+                garantie.setCapitale(gDto.getCapitale());
+                garantie.setPrimeNET(gDto.getPrimeNET());
+                garantie.setPrimeTTC(gDto.getPrimeTTC());
+                garantieSectionRepository.save(garantie);
+
+                // Exclusions
+                for (ExclusionGarantieDTO eDto : gDto.getExclusions()) {
+                    Exclusion exclusion = exclusionRepository.findById(eDto.getExclusionId())
+                            .orElseThrow(() -> new Exception("Exclusion introuvable"));
+                    ExclusionGarantie exG = new ExclusionGarantie();
+                    exG.setGarantieSection(garantie);
+                    exG.setExclusion(exclusion);
+                    exclusionGarantieRepository.save(exG);
+                }
+            }
+        }
+
+        // 6️⃣ Historique
         logHistoriqueModification(contrat, username);
 
-        // Déverrouillage après enregistrement
+        // 7️⃣ Déverrouillage
         unlockContratInternal(contrat);
 
         return contrat;
     }
 
     // ------------------- LOCK / UNLOCK -------------------
-    @Transactional
-    public void lockContrat(String numPolice, HttpServletRequest request) throws Exception {
-        String username = validateTokenAndGetUser(request);
+   /* @Transactional
+    public Contrat lockContrat(String numPolice, HttpServletRequest request) throws Exception {
+        String token = jwtService.getTokenFromRequest(request);
+        if (token == null) throw new Exception("Token manquant");
+
+        String username = jwtService.extractUserName(token);
+
+        // Vérifier si l’utilisateur a déjà un contrat locké
+        Optional<Contrat> existingLock = contratRepository.findByEditingUser(username);
+        if (existingLock.isPresent() && !existingLock.get().getNumPolice().equals(numPolice)) {
+            throw new Exception("Vous avez déjà un contrat en cours de modification : "
+                    + existingLock.get().getNumPolice());
+        }
 
         Contrat contrat = contratRepository.findById(numPolice)
                 .orElseThrow(() -> new Exception("Contrat introuvable"));
 
         if (contrat.getEditingUser() != null && !contrat.getEditingUser().equals(username)) {
-            throw new Exception("Contrat déjà verrouillé par " + contrat.getEditingUser());
+            throw new Exception("Contrat déjà en cours de modification par un autre utilisateur");
         }
 
         contrat.setEditingUser(username);
         contrat.setEditingStart(LocalDateTime.now());
-        contratRepository.save(contrat);
-    }
+        return contratRepository.save(contrat);
+    }*/
 
-    @Transactional
+  /*  @Transactional
     public void unlockContrat(String numPolice, HttpServletRequest request, boolean cancelled, LocalDateTime startTime) throws Exception {
         String username = validateTokenAndGetUser(request);
 
+        // Récupérer le contrat exact par son numéro
         Contrat contrat = contratRepository.findById(numPolice)
                 .orElseThrow(() -> new Exception("Contrat introuvable"));
 
-        boolean isAdmin = Boolean.parseBoolean(request.getHeader("isAdmin"));
-        if (!isAdmin && !username.equals(contrat.getEditingUser())) {
-            throw new Exception("Vous ne pouvez pas déverrouiller ce contrat");
-        }
-
-        // ✅ Calcul du temps basé sur le startTime envoyé par le front
+        // Calcul du temps basé sur le startTime envoyé par le front
         long tempsRealisation = startTime != null
                 ? java.time.Duration.between(startTime, LocalDateTime.now()).toMillis()
                 : 0;
@@ -215,7 +283,68 @@ public class ContratService {
 
         historiqueContratService.enregistrerHistorique(action, username, tempsRealisation);
 
+        // 🔹 Déverrouillage du contrat précis
         unlockContratInternal(contrat);
+    }*/
+
+
+    @Transactional
+    public Contrat lockContrat(String numPolice, HttpServletRequest request) throws Exception {
+        String token = jwtService.getTokenFromRequest(request);
+        if (token == null) throw new Exception("Token manquant");
+
+        String username = jwtService.extractUserName(token);
+
+        // Vérifier si l’utilisateur a déjà un contrat locké
+        List<Contrat> existingLocks = contratRepository.findByEditingUser(username);
+        boolean hasOtherLock = existingLocks.stream()
+                .anyMatch(c -> !c.getNumPolice().equals(numPolice));
+
+        if (hasOtherLock) {
+            throw new Exception("Vous avez déjà un contrat en cours de modification : "
+                    + existingLocks.get(0).getNumPolice());
+        }
+
+        Contrat contrat = contratRepository.findById(numPolice)
+                .orElseThrow(() -> new Exception("Contrat introuvable"));
+
+        if (contrat.getEditingUser() != null && !contrat.getEditingUser().equals(username)) {
+            throw new Exception("Contrat déjà en cours de modification par un autre utilisateur");
+        }
+
+        contrat.setEditingUser(username);
+        contrat.setEditingStart(LocalDateTime.now());
+
+        return contratRepository.save(contrat);
+    }
+
+    // ----------------------- UNLOCK -----------------------
+    @Transactional
+    public void unlockContrat(String numPolice, HttpServletRequest request, boolean cancelled, LocalDateTime startTime) throws Exception {
+        String username = jwtService.extractUserName(jwtService.getTokenFromRequest(request));
+
+        Contrat contrat = contratRepository.findById(numPolice)
+                .orElseThrow(() -> new Exception("Contrat introuvable"));
+
+        if (contrat.getEditingUser() == null || !contrat.getEditingUser().equals(username)) {
+            throw new Exception("Vous ne pouvez pas déverrouiller ce contrat");
+        }
+
+        // Historique
+        long tempsRealisation = startTime != null
+                ? java.time.Duration.between(startTime, LocalDateTime.now()).toMillis()
+                : 0;
+
+        String action = cancelled
+                ? "Tentative modification contrat " + contrat.getNumPolice() + " (annulée)"
+                : "Fin modification contrat " + contrat.getNumPolice();
+
+        historiqueContratService.enregistrerHistorique(action, username, tempsRealisation);
+
+        // Déverrouillage
+        contrat.setEditingUser(null);
+        contrat.setEditingStart(null);
+        contratRepository.save(contrat);
     }
 
 

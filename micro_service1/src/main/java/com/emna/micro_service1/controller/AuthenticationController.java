@@ -1,7 +1,10 @@
 package com.emna.micro_service1.controller;
 
 import com.emna.jwt_service.Service.ServiceImpl.JwtServiceImpl;
+import com.emna.micro_service1.DTO.CurrentUser;
+import com.emna.micro_service1.DTO.ResetPasswordDTO;
 import com.emna.micro_service1.DTO.UserDTO;
+
 import com.emna.micro_service1.dao.request.SignUpRequest;
 import com.emna.micro_service1.dao.request.SigninRequest;
 import com.emna.micro_service1.dao.response.JwtAuthenticationResponse;
@@ -22,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -341,6 +344,68 @@ public class AuthenticationController {
       return ResponseEntity.ok().build(); // No body
   }
 
+    @PutMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(
+            @RequestBody ResetPasswordDTO dto,
+            HttpServletRequest request
+    ) {
+        try {
+            // Extraire le token depuis l'en-tête Authorization
+            String token = jwtService.getTokenFromRequest(request);
+            if (token == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Missing or invalid token.");
+            }
 
+            // Extraire le username à partir du token
+            String username = jwtService.extractUserName(token);
+            if (username == null || username.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Invalid token: cannot extract user.");
+            }
+
+            // Vérifier si le token est valide
+            User adminUser = userRepository.findByEmail(username)
+                    .orElseThrow(() -> new UserNotFoundException("Admin user not found."));
+
+            if (!jwtService.isTokenValid(token, new UserDetailsImpl(username))) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Invalid token.");
+            }
+
+            // Appeler le service pour réinitialiser le mot de passe
+            authenticationService.resetPassword(dto);
+            return ResponseEntity.ok("Password updated successfully");
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error while resetting password: " + e.getMessage());
+        }
+    }
+    @GetMapping("/me")
+    public ResponseEntity<CurrentUser> getCurrentUser(HttpServletRequest request) {
+        String token = jwtService.getTokenFromRequest(request);
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String username = jwtService.extractUserName(token);
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (!jwtService.isTokenValid(token, new UserDetailsImpl(username))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        CurrentUser dto = new CurrentUser(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail(),
+                user.getRole()
+        );
+
+        return ResponseEntity.ok(dto);
+    }
 
 }
