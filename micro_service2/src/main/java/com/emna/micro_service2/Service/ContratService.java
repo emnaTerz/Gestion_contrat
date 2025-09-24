@@ -1,18 +1,17 @@
 package com.emna.micro_service2.Service;
 
 import com.emna.micro_service2.Repository.*;
-import com.emna.micro_service2.dto.ContratDTO;
-import com.emna.micro_service2.dto.ExclusionGarantieDTO;
-import com.emna.micro_service2.dto.GarantieSectionDTO;
+import com.emna.micro_service2.dto.*;
 import com.emna.micro_service2.dto.Responses.*;
-import com.emna.micro_service2.dto.SectionDTO;
 import com.emna.micro_service2.entities.*;
 import com.emna.jwt_service.Service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -81,24 +80,42 @@ public class ContratService {
         contrat.setDateFin(dto.getDateFin());
         contrat.setEditingUser(username);
         contrat.setEditingStart(LocalDateTime.now());
+        contrat.setCodeAgence(dto.getCodeAgence()); // <-- ajouté
 
-        // -------------------- CREATION ADHERENT --------------------
+        // -------------------- CREATION / ASSOCIATION ADHERENT --------------------
         if (dto.getAdherent() != null) {
-            Adherent adherent = adherentRepository.findById(dto.getAdherent().getCodeId())
-                    .orElseGet(() -> new Adherent(
-                            dto.getAdherent().getCodeId(),
-                            dto.getAdherent().getNomRaison(),
-                            dto.getAdherent().getAdresse(),
-                            dto.getAdherent().getActivite()
-                    ));
+            Optional<Adherent> optionalAdherent = adherentRepository.findById(dto.getAdherent().getCodeId());
+
+            Adherent adherent;
+            if (optionalAdherent.isPresent()) {
+                // ✅ Adhérent déjà existant → on l'associe
+                adherent = optionalAdherent.get();
+
+                // Si le DTO dit "nouveau = true" mais il existe déjà → on force à false
+                if (dto.getAdherent().isNouveau()) {
+                    adherent.setNouveau(false);
+                }
+            } else {
+                // ✅ Nouvel adhérent → on le crée
+                adherent = new Adherent(
+                        dto.getAdherent().getCodeId(),
+                        dto.getAdherent().getNomRaison(),
+                        dto.getAdherent().getAdresse(),
+                        dto.getAdherent().isNouveau(), // true ou false selon DTO
+                        dto.getAdherent().getActivite()
+                );
+            }
+
+            // 🔄 Dans les deux cas on met à jour les infos de base
             adherent.setNomRaison(dto.getAdherent().getNomRaison());
             adherent.setAdresse(dto.getAdherent().getAdresse());
             adherent.setActivite(dto.getAdherent().getActivite());
+            adherent.setNouveau(dto.getAdherent().isNouveau());
+
             adherentRepository.save(adherent);
             contrat.setAdherent(adherent);
         }
 
-        contratRepository.save(contrat);
 
         // -------------------- CREATION SECTIONS, GARANTIES, EXCLUSIONS --------------------
         if (dto.getSections() != null) {
@@ -118,7 +135,6 @@ public class ContratService {
                         gs.setSection(section);
                         gs.setSousGarantie(gDTO.getSousGarantieId() != null ? findSousGarantieById(gDTO.getSousGarantieId()) : null);
                         gs.setFranchise(gDTO.getFranchise());
-                        gs.setLimite(gDTO.getLimite());
                         gs.setMaximum(gDTO.getMaximum());
                         gs.setMinimum(gDTO.getMinimum());
                         gs.setCapitale(gDTO.getCapitale());
@@ -173,6 +189,20 @@ public class ContratService {
         // 3️⃣ Mettre à jour les champs simples
         mapDtoToEntity(dto, contrat);
         contratRepository.save(contrat);
+        AdherentDTO aDto = dto.getAdherent();
+        if (aDto != null) {
+            Adherent adherent = contrat.getAdherent();
+            if (adherent == null) {
+                adherent = new Adherent();
+                contrat.setAdherent(adherent);
+            }
+            adherent.setCodeId(aDto.getCodeId());
+            adherent.setNomRaison(aDto.getNomRaison());
+            adherent.setAdresse(aDto.getAdresse());
+            adherent.setActivite(aDto.getActivite());
+            adherent.setNouveau(aDto.isNouveau());  // 🔹 Assure que le boolean est correctement mis à jour
+            adherentRepository.save(adherent);
+        }
 
         // 4️⃣ Supprimer les anciennes sections, garanties et exclusions
         List<Section> anciennesSections = sectionRepository.findByContrat_NumPolice(contrat.getNumPolice());
@@ -207,7 +237,7 @@ public class ContratService {
                         .orElseThrow(() -> new Exception("SousGarantie introuvable"));
                 garantie.setSousGarantie(sousGarantie);
 
-                garantie.setLimite(gDto.getLimite());
+
                 garantie.setMaximum(gDto.getMaximum());
                 garantie.setMinimum(gDto.getMinimum());
                 garantie.setCapitale(gDto.getCapitale());
@@ -237,81 +267,44 @@ public class ContratService {
     }
 
     // ------------------- LOCK / UNLOCK -------------------
-   /* @Transactional
-    public Contrat lockContrat(String numPolice, HttpServletRequest request) throws Exception {
-        String token = jwtService.getTokenFromRequest(request);
-        if (token == null) throw new Exception("Token manquant");
 
-        String username = jwtService.extractUserName(token);
-
-        // Vérifier si l’utilisateur a déjà un contrat locké
-        Optional<Contrat> existingLock = contratRepository.findByEditingUser(username);
-        if (existingLock.isPresent() && !existingLock.get().getNumPolice().equals(numPolice)) {
-            throw new Exception("Vous avez déjà un contrat en cours de modification : "
-                    + existingLock.get().getNumPolice());
-        }
-
-        Contrat contrat = contratRepository.findById(numPolice)
-                .orElseThrow(() -> new Exception("Contrat introuvable"));
-
-        if (contrat.getEditingUser() != null && !contrat.getEditingUser().equals(username)) {
-            throw new Exception("Contrat déjà en cours de modification par un autre utilisateur");
-        }
-
-        contrat.setEditingUser(username);
-        contrat.setEditingStart(LocalDateTime.now());
-        return contratRepository.save(contrat);
-    }*/
-
-  /*  @Transactional
-    public void unlockContrat(String numPolice, HttpServletRequest request, boolean cancelled, LocalDateTime startTime) throws Exception {
-        String username = validateTokenAndGetUser(request);
-
-        // Récupérer le contrat exact par son numéro
-        Contrat contrat = contratRepository.findById(numPolice)
-                .orElseThrow(() -> new Exception("Contrat introuvable"));
-
-        // Calcul du temps basé sur le startTime envoyé par le front
-        long tempsRealisation = startTime != null
-                ? java.time.Duration.between(startTime, LocalDateTime.now()).toMillis()
-                : 0;
-
-        // Historique
-        String action = cancelled
-                ? "Tentative modification contrat " + contrat.getNumPolice() + " (annulée)"
-                : "Fin modification contrat " + contrat.getNumPolice();
-
-        historiqueContratService.enregistrerHistorique(action, username, tempsRealisation);
-
-        // 🔹 Déverrouillage du contrat précis
-        unlockContratInternal(contrat);
-    }*/
-
+    @Transactional(readOnly = true)
+    public List<Contrat> getLockedContrats() {
+        return contratRepository.findByEditingUserIsNotNull();
+    }
 
     @Transactional
     public Contrat lockContrat(String numPolice, HttpServletRequest request) throws Exception {
         String token = jwtService.getTokenFromRequest(request);
-        if (token == null) throw new Exception("Token manquant");
+        if (token == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token manquant");
+        }
 
         String username = jwtService.extractUserName(token);
 
-        // Vérifier si l’utilisateur a déjà un contrat locké
+        // Vérifier si l’utilisateur a déjà un contrat verrouillé
         List<Contrat> existingLocks = contratRepository.findByEditingUser(username);
         boolean hasOtherLock = existingLocks.stream()
                 .anyMatch(c -> !c.getNumPolice().equals(numPolice));
 
         if (hasOtherLock) {
-            throw new Exception("Vous avez déjà un contrat en cours de modification : "
-                    + existingLocks.get(0).getNumPolice());
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Vous avez déjà un contrat en cours de modification : " + existingLocks.get(0).getNumPolice()
+            );
         }
 
         Contrat contrat = contratRepository.findById(numPolice)
-                .orElseThrow(() -> new Exception("Contrat introuvable"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contrat introuvable"));
 
         if (contrat.getEditingUser() != null && !contrat.getEditingUser().equals(username)) {
-            throw new Exception("Contrat déjà en cours de modification par un autre utilisateur");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Ce contrat est déjà verrouillé par un autre utilisateur"
+            );
         }
 
+        // Verrouillage du contrat
         contrat.setEditingUser(username);
         contrat.setEditingStart(LocalDateTime.now());
 
@@ -386,6 +379,7 @@ public class ContratService {
         contratDTO.setDateFin(contrat.getDateFin());
         contratDTO.setEditingUser(contrat.getEditingUser());
         contratDTO.setEditingStart(contrat.getEditingStart());
+        contratDTO.setCodeAgence(contrat.getCodeAgence());
 
         // Adhérent
         if (contrat.getAdherent() != null) {
@@ -394,7 +388,8 @@ public class ContratService {
                     a.getCodeId(),
                     a.getNomRaison(),
                     a.getAdresse(),
-                    a.getActivite()
+                    a.getActivite(),
+                    a.isNouveau()
             );
             contratDTO.setAdherent(adherentDTO);
         }
@@ -422,7 +417,6 @@ public class ContratService {
                 gsDTO.setSectionId(gs.getSection().getId());
                 gsDTO.setSousGarantieId(gs.getSousGarantie() != null ? gs.getSousGarantie().getId() : null);
                 gsDTO.setFranchise(gs.getFranchise());
-                gsDTO.setLimite(gs.getLimite());
                 gsDTO.setMaximum(gs.getMaximum());
                 gsDTO.setMinimum(gs.getMinimum());
                 gsDTO.setCapitale(gs.getCapitale());
@@ -508,6 +502,7 @@ public class ContratService {
         contrat.setNom_assure(dto.getNom_assure());
         contrat.setDateFin(dto.getDateFin());
         contrat.setAdherent(dto.getAdherent() != null ? mapAdherentDtoToEntity(dto.getAdherent()) : null);
+        contrat.setCodeAgence(dto.getCodeAgence()); // <-- ajouté
     }
 
     private Adherent mapAdherentDtoToEntity(com.emna.micro_service2.dto.AdherentDTO dto) {
@@ -537,7 +532,7 @@ public class ContratService {
         if (contrat.getAdherent() != null) {
             Adherent a = contrat.getAdherent();
             contratDTO.setAdherent(new AdherentResponseDTO(
-                    a.getCodeId(), a.getNomRaison(), a.getAdresse(), a.getActivite()
+                    a.getCodeId(), a.getNomRaison(), a.getAdresse(), a.getActivite(),a.isNouveau()
             ));
         }
 
@@ -562,7 +557,6 @@ public class ContratService {
                 gsDTO.setSectionId(gs.getSection().getId());
                 gsDTO.setSousGarantieId(gs.getSousGarantie() != null ? gs.getSousGarantie().getId() : null);
                 gsDTO.setFranchise(gs.getFranchise());
-                gsDTO.setLimite(gs.getLimite());
                 gsDTO.setMaximum(gs.getMaximum());
                 gsDTO.setMinimum(gs.getMinimum());
                 gsDTO.setCapitale(gs.getCapitale());
@@ -587,4 +581,7 @@ public class ContratService {
 
         return contratDTO;
     }
+
+
+
 }

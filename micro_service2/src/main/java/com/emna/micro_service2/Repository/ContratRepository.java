@@ -14,6 +14,7 @@ public interface ContratRepository extends JpaRepository<Contrat, String> {
     boolean existsByNumPolice(String numPolice);
    /* Optional<Contrat> findByEditingUser(String username);*/
     List<Contrat> findByEditingUser(String username);
+    List<Contrat> findByEditingUserIsNotNull();
 
 
 }

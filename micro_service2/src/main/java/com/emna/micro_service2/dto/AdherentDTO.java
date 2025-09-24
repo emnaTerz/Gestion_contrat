@@ -5,6 +5,7 @@ public class AdherentDTO {
     private String nomRaison;
     private String adresse;
     private String activite;
+    private boolean nouveau;
 
     public AdherentDTO() {}
 
@@ -20,4 +21,12 @@ public class AdherentDTO {
 
     public String getActivite() { return activite; }
     public void setActivite(String activite) { this.activite = activite; }
+
+    public boolean isNouveau() {
+        return nouveau;
+    }
+
+    public void setNouveau(boolean nouveau) {
+        this.nouveau = nouveau;
+    }
 }

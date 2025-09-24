@@ -102,35 +102,35 @@ public class AuthenticationController {
         }
     }
 
-   @GetMapping
-   public  ResponseEntity<?>  getAllUsers(HttpServletRequest request) {
+    @GetMapping
+    public  ResponseEntity<?>  getAllUsers(HttpServletRequest request) {
 
-       try {
-           // Extraire le token via JwtServiceImpl
-           String token = jwtService.getTokenFromRequest(request);
-           if (token == null) {
-               return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid token.");
-           }
+        try {
+            // Extraire le token via JwtServiceImpl
+            String token = jwtService.getTokenFromRequest(request);
+            if (token == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid token.");
+            }
 
-           // Extraire et valider le username
-           String username = jwtService.extractUserName(token);
-           if (!jwtService.isTokenValid(token, new UserDetailsImpl(username))) {
-               return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid token.");
-           }
+            // Extraire et valider le username
+            String username = jwtService.extractUserName(token);
+            if (!jwtService.isTokenValid(token, new UserDetailsImpl(username))) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid token.");
+            }
 
-       // If the token is valid, fetch all users
-       List<User> users = userService.getAllUsers();
-           userActionService.logUserAction(username, "Afficher tt les utilisateurs", "/getAllUsers", "GET");
-       return ResponseEntity.ok(users);
-       } catch (ExpiredJwtException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token has expired, please log in again.");
-    } catch (MalformedJwtException e) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid token.");
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
-    }}
+            // If the token is valid, fetch all users
+            List<User> users = userService.getAllUsers();
+            userActionService.logUserAction(username, "Afficher tt les utilisateurs", "/getAllUsers", "GET");
+            return ResponseEntity.ok(users);
+        } catch (ExpiredJwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token has expired, please log in again.");
+        } catch (MalformedJwtException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid token.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+        }}
 
-  @PutMapping("/{id}")
+    @PutMapping("/{id}")
   public ResponseEntity<?> updateUser(
           @PathVariable Integer id,
           @RequestBody User updatedUser,
@@ -318,14 +318,20 @@ public class AuthenticationController {
 
     @GetMapping("/email/{email}")
     public ResponseEntity<UserDTO> getUserByEmail(@PathVariable String email) {
-        Optional<User> user = userRepository.findByEmail(email);
-        return user.map(u -> ResponseEntity.ok(new UserDTO(
-                        u.getEmail(), u.getFirstName(), u.getLastName(), u.getRole())))
+        return userRepository.findByEmail(email)
+                .map(u -> ResponseEntity.ok(new UserDTO(
+                        u.getEmail(),
+                        u.getFirstName(),
+                        u.getLastName(),
+                        u.getRole()
+
+                )))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
 
-  @PostMapping("/historique/add")
+
+    @PostMapping("/historique/add")
   public ResponseEntity<Void> createUserHistory(@RequestBody UserActionHistory userActionHistory) {
       System.out.println("Received UserActionHistory: " + userActionHistory.getAction());
 

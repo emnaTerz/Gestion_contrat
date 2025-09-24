@@ -42,4 +42,5 @@ public class HistoriqueContratService {
                 .orElseThrow(() -> new EntityNotFoundException("Historique introuvable avec id " + id));
         historiqueContratRepository.delete(historique);
     }
+
 }

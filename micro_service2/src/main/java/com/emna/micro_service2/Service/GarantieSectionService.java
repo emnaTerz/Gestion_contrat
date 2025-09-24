@@ -50,7 +50,6 @@ public class GarantieSectionService {
         garantie.setSection(section); // 🔴 on passe la section déjà créée
         garantie.setSousGarantie(sousGarantie);
         garantie.setFranchise(dto.getFranchise());
-        garantie.setLimite(dto.getLimite());
         garantie.setMaximum(dto.getMaximum());
         garantie.setMinimum(dto.getMinimum());
         garantie.setCapitale(dto.getCapitale());
@@ -68,7 +67,6 @@ public class GarantieSectionService {
         SousGarantie sg = new SousGarantie();
         sg.setId(dto.getSousGarantieId());
         garantie.setSousGarantie(sg);
-        garantie.setLimite(dto.getLimite());
         garantie.setMaximum(dto.getMaximum());
         garantie.setMinimum(dto.getMinimum());
         garantie.setCapitale(dto.getCapitale());

@@ -6,14 +6,17 @@ public class AdherentResponseDTO {
     private String nomRaison;
     private String adresse;
     private String activite;
+    private boolean nouveau;
+
 
     public AdherentResponseDTO() {}
 
-    public AdherentResponseDTO(String codeId, String nomRaison, String adresse, String activite) {
+    public AdherentResponseDTO(String codeId, String nomRaison, String adresse, String activite, boolean nouveau) {
         this.codeId = codeId;
         this.nomRaison = nomRaison;
         this.adresse = adresse;
         this.activite = activite;
+        this.nouveau = nouveau;
     }
 
     // Getters & Setters
@@ -28,5 +31,13 @@ public class AdherentResponseDTO {
 
     public String getActivite() { return activite; }
     public void setActivite(String activite) { this.activite = activite; }
+
+    public boolean isNouveau() {
+        return nouveau;
+    }
+
+    public void setNouveau(boolean nouveau) {
+        this.nouveau = nouveau;
+    }
 }
 

@@ -12,9 +12,11 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,6 +31,8 @@ public class ContratController {
     private JwtService jwtService;
     @Autowired
     private HistoriqueContratService historiqueContratService;
+
+
 
 
         @PostMapping("/creer")
@@ -103,4 +107,35 @@ public class ContratController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    @GetMapping("/locked")
+    public ResponseEntity<List<Contrat>> getLockedContrats(HttpServletRequest request) {
+        try {
+            // Extraire le token depuis l'en-tête Authorization
+            String token = jwtService.getTokenFromRequest(request);
+            if (token == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+
+            // Extraire le username à partir du token
+            String username = jwtService.extractUserName(token);
+            if (username == null || username.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+
+            // Vérifier que le token est valide
+            if (!jwtService.isTokenValid(token, username)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+
+            // Récupérer tous les contrats verrouillés
+            List<Contrat> lockedContrats = contratService.getLockedContrats();
+            return ResponseEntity.ok(lockedContrats);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+
 }

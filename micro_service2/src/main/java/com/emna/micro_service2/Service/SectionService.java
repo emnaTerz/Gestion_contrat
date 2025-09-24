@@ -40,10 +40,7 @@ public class SectionService {
         Contrat contrat = contratRepository.findById(dto.getNumPolice())
                 .orElseThrow(() -> new Exception("Contrat introuvable"));
 
-        // Vérification lock du contrat
-        if (contrat.getEditingUser() != null && !contrat.getEditingUser().equals(username)) {
-            throw new Exception("Contrat verrouillé par " + contrat.getEditingUser());
-        }
+
 
         Section section;
 

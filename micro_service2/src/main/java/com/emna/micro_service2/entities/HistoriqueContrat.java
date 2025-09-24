@@ -41,4 +41,6 @@ public class HistoriqueContrat {
 
     public Long getTempsRealisation() { return tempsRealisation; }
     public void setTempsRealisation(Long tempsRealisation) { this.tempsRealisation = tempsRealisation; }
+
+
 }

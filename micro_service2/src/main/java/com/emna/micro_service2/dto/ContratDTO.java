@@ -25,6 +25,7 @@ public class ContratDTO {
     // -------------------- NOUVEAU --------------------
     private LocalDateTime startTime;
     private List<SectionDTO> sections;
+    private CodeAgence codeAgence;
 
     public ContratDTO() {}
 
@@ -72,5 +73,13 @@ public class ContratDTO {
 
     public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
+    }
+
+    public CodeAgence getCodeAgence() {
+        return codeAgence;
+    }
+
+    public void setCodeAgence(CodeAgence codeAgence) {
+        this.codeAgence = codeAgence;
     }
 }

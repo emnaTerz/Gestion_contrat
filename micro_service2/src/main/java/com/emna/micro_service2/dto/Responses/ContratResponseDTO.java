@@ -22,6 +22,7 @@ public class ContratResponseDTO {
     private String editingUser;
     private LocalDateTime editingStart;
     private List<SectionResponseDTO> sections;
+    private CodeAgence codeAgence;
 
     public ContratResponseDTO() {}
 
@@ -73,4 +74,12 @@ public class ContratResponseDTO {
 
     public List<SectionResponseDTO> getSections() { return sections; }
     public void setSections(List<SectionResponseDTO> sections) { this.sections = sections; }
+
+    public CodeAgence getCodeAgence() {
+        return codeAgence;
+    }
+
+    public void setCodeAgence(CodeAgence codeAgence) {
+        this.codeAgence = codeAgence;
+    }
 }

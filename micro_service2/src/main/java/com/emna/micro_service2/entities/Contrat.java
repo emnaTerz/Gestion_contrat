@@ -15,7 +15,9 @@ public class Contrat {
     @ManyToOne
     @JoinColumn(name = "adherent_id")
     private Adherent adherent;
+
     private String Nom_assure;
+
     @Enumerated(EnumType.STRING)
     private Fractionnement fractionnement;
 
@@ -28,31 +30,47 @@ public class Contrat {
     @Enumerated(EnumType.STRING)
     private TypeContrat typeContrat;
 
-    private double primeTTC;
+    @Enumerated(EnumType.STRING)
+    private CodeAgence codeAgence;
 
+    private double primeTTC;
     private LocalDate dateDebut;
     private LocalDate dateFin;
     private String editingUser;
     private LocalDateTime editingStart;
-    public Contrat() {}
+
     @Enumerated(EnumType.STRING)
     private Preambule preambule;
 
+    public Contrat() {}
 
-    public Contrat(String numPolice, Adherent adherent, String nom_assure, Fractionnement fractionnement, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, double primeTTC, LocalDate dateDebut, LocalDate dateFin, String editingUser, LocalDateTime editingStart, Preambule preambule) {
+    public Contrat(String numPolice, Adherent adherent, String nom_assure, Fractionnement fractionnement,
+                   CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat,
+                   CodeAgence codeAgence, double primeTTC, LocalDate dateDebut, LocalDate dateFin,
+                   String editingUser, LocalDateTime editingStart, Preambule preambule) {
         this.numPolice = numPolice;
         this.adherent = adherent;
-        Nom_assure = nom_assure;
+        this.Nom_assure = nom_assure;
         this.fractionnement = fractionnement;
         this.codeRenouvellement = codeRenouvellement;
         this.branche = branche;
         this.typeContrat = typeContrat;
+        this.codeAgence = codeAgence; // <-- initialisation
         this.primeTTC = primeTTC;
         this.dateDebut = dateDebut;
         this.dateFin = dateFin;
         this.editingUser = editingUser;
         this.editingStart = editingStart;
         this.preambule = preambule;
+    }
+
+    // Getter et Setter pour codeAgence
+    public CodeAgence getCodeAgence() {
+        return codeAgence;
+    }
+
+    public void setCodeAgence(CodeAgence codeAgence) {
+        this.codeAgence = codeAgence;
     }
 
     public String getNom_assure() {

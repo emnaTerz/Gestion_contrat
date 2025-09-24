@@ -10,15 +10,19 @@ public class Adherent {
 
     private String nomRaison;      // Nom ou raison sociale
     private String adresse;        // Adresse
-
+    @Column(name = "nouveau")
+    private boolean nouveau;
 
     private String activite;
 
     // Constructeur complet
-    public Adherent(String codeId, String nomRaison, String adresse, String activite) {
+
+
+    public Adherent(String codeId, String nomRaison, String adresse, boolean nouveau, String activite) {
         this.codeId = codeId;
         this.nomRaison = nomRaison;
         this.adresse = adresse;
+        this.nouveau = nouveau;
         this.activite = activite;
     }
 
@@ -40,5 +44,13 @@ public class Adherent {
 
     public void setActivite(String activite) {
         this.activite = activite;
+    }
+
+    public boolean isNouveau() {
+        return nouveau;
+    }
+
+    public void setNouveau(boolean nouveau) {
+        this.nouveau = nouveau;
     }
 }

@@ -2,14 +2,18 @@ package com.emna.micro_service1.DTO;
 
 import com.emna.micro_service1.entities.Role;
 
+
 public class UserDTO {
     private String email;
     private String firstName;
     private String lastName;
     private Role role;
 
+
     // Constructors
     public UserDTO() {}
+
+
 
     public UserDTO(String email, String firstName, String lastName, Role role) {
         this.email = email;
@@ -17,6 +21,10 @@ public class UserDTO {
         this.lastName = lastName;
         this.role = role;
     }
+
+
+
+
 
     // Getters & Setters
     public String getEmail() { return email; }
@@ -30,4 +38,6 @@ public class UserDTO {
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
+
+
 }

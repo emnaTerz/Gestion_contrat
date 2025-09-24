@@ -33,6 +33,7 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(id);
     }
 
+
     @Override
     public User updateUser(Integer userId, User updatedUser) {
         return userRepository.findById(userId)
@@ -40,12 +41,12 @@ public class UserServiceImpl implements UserService {
                     existingUser.setFirstName(updatedUser.getFirstName());
                     existingUser.setLastName(updatedUser.getLastName());
                     existingUser.setEmail(updatedUser.getEmail());
-                    existingUser.setPassword(updatedUser.getPassword());
                     existingUser.setRole(updatedUser.getRole());
                     return userRepository.save(existingUser);
                 })
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
     }
+
 
     @Override
     public User getUserById(Integer id) {

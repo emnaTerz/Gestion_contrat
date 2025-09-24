@@ -1,5 +1,6 @@
 package com.emna.micro_service1.dao.request;
 
+
 import com.emna.micro_service1.entities.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,4 +17,5 @@ public class SignUpRequest {
     private String email;
     private String password;
     private Role role;
+
 }

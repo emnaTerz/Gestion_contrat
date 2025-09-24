@@ -9,7 +9,6 @@ public class GarantieSectionResponseDTO {
     private Long sectionId;
     private Long sousGarantieId;
     private Long franchise;
-    private Double limite;
     private Double maximum;
     private Double minimum;
     private Double capitale;
@@ -36,8 +35,7 @@ public class GarantieSectionResponseDTO {
         this.franchise = franchise;
     }
 
-    public Double getLimite() { return limite; }
-    public void setLimite(Double limite) { this.limite = limite; }
+
 
     public Double getMaximum() { return maximum; }
     public void setMaximum(Double maximum) { this.maximum = maximum; }
