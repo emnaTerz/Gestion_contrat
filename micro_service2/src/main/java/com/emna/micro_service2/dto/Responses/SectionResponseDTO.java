@@ -1,6 +1,8 @@
 package com.emna.micro_service2.dto.Responses;
 
 
+import com.emna.micro_service2.dto.RCExploitationDTO;
+
 import java.util.List;
 
 public class SectionResponseDTO {
@@ -12,7 +14,8 @@ public class SectionResponseDTO {
     private String avoisinage;
     private String numPolice; // Référence au contrat
     private List<GarantieSectionResponseDTO> garanties;
-
+    private boolean rcExploitationActive; // true si cette section a RC
+    private RCExploitationResponseDTO rcExploitation;
     public SectionResponseDTO() {}
 
     // Getters & Setters
@@ -39,4 +42,15 @@ public class SectionResponseDTO {
 
     public List<GarantieSectionResponseDTO> getGaranties() { return garanties; }
     public void setGaranties(List<GarantieSectionResponseDTO> garanties) { this.garanties = garanties; }
+
+    public boolean isRcExploitationActive() {
+        return rcExploitationActive;
+    }
+
+    public void setRcExploitationActive(boolean rcExploitationActive) {
+        this.rcExploitationActive = rcExploitationActive;
+    }
+
+    public RCExploitationResponseDTO getRcExploitation() { return rcExploitation; }
+    public void setRcExploitation(RCExploitationResponseDTO rcExploitation) { this.rcExploitation = rcExploitation; }
 }

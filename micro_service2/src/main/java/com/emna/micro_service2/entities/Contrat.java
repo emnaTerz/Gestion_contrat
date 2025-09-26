@@ -39,23 +39,20 @@ public class Contrat {
     private String editingUser;
     private LocalDateTime editingStart;
 
-    @Enumerated(EnumType.STRING)
-    private Preambule preambule;
+    @Lob
+    private String preambule;
 
     public Contrat() {}
 
-    public Contrat(String numPolice, Adherent adherent, String nom_assure, Fractionnement fractionnement,
-                   CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat,
-                   CodeAgence codeAgence, double primeTTC, LocalDate dateDebut, LocalDate dateFin,
-                   String editingUser, LocalDateTime editingStart, Preambule preambule) {
+    public Contrat(String numPolice, Adherent adherent, String nom_assure, Fractionnement fractionnement, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, CodeAgence codeAgence, double primeTTC, LocalDate dateDebut, LocalDate dateFin, String editingUser, LocalDateTime editingStart, String preambule) {
         this.numPolice = numPolice;
         this.adherent = adherent;
-        this.Nom_assure = nom_assure;
+        Nom_assure = nom_assure;
         this.fractionnement = fractionnement;
         this.codeRenouvellement = codeRenouvellement;
         this.branche = branche;
         this.typeContrat = typeContrat;
-        this.codeAgence = codeAgence; // <-- initialisation
+        this.codeAgence = codeAgence;
         this.primeTTC = primeTTC;
         this.dateDebut = dateDebut;
         this.dateFin = dateFin;
@@ -82,8 +79,15 @@ public class Contrat {
     }
 
     // Getters & Setters
-    public Preambule getPreambule() { return preambule; }
-    public void setPreambule(Preambule preambule) { this.preambule = preambule; }
+
+    public String getPreambule() {
+        return preambule;
+    }
+
+    public void setPreambule(String preambule) {
+        this.preambule = preambule;
+    }
+
     public String getNumPolice() { return numPolice; }
     public void setNumPolice(String numPolice) { this.numPolice = numPolice; }
 
@@ -102,12 +106,6 @@ public class Contrat {
     public TypeContrat getTypeContrat() { return typeContrat; }
     public void setTypeContrat(TypeContrat typeContrat) {
         this.typeContrat = typeContrat;
-        // règle automatique
-        if (typeContrat == TypeContrat.APPEL_D_OFFRE) {
-            this.preambule = Preambule.PREMIER;
-        } else {
-            this.preambule = Preambule.DEUXIEME;
-        }
     }
     public double getPrimeTTC() { return primeTTC; }
     public void setPrimeTTC(double primeTTC) { this.primeTTC = primeTTC; }
@@ -122,4 +120,7 @@ public class Contrat {
 
     public LocalDateTime getEditingStart() { return editingStart; }
     public void setEditingStart(LocalDateTime editingStart) { this.editingStart = editingStart; }
+
+
+    
 }

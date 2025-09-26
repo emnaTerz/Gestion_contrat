@@ -4,14 +4,9 @@ package com.emna.micro_service2.Controller;
 
 
 
-import com.emna.micro_service2.Service.ClausierService;
-import com.emna.micro_service2.Service.GarantieService;
-import com.emna.micro_service2.Service.SousGarantieService;
-import com.emna.micro_service2.Service.ExclusionService;
-import com.emna.micro_service2.entities.Clausier;
-import com.emna.micro_service2.entities.Garantie;
-import com.emna.micro_service2.entities.SousGarantie;
-import com.emna.micro_service2.entities.Exclusion;
+import com.emna.micro_service2.Service.*;
+import com.emna.micro_service2.dto.ExclusionRCRequest;
+import com.emna.micro_service2.entities.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,12 +20,16 @@ public class CatalogueController {
     private final SousGarantieService sousGarantieService;
     private final ExclusionService exclusionService;
     private final ClausierService clausierService;
+    private final ExclusionRCService exclusionRCService;
 
-    public CatalogueController(GarantieService garantieService, SousGarantieService sousGarantieService, ExclusionService exclusionService, ClausierService clausierService) {
+    public CatalogueController(GarantieService garantieService, SousGarantieService sousGarantieService,
+                               ExclusionService exclusionService, ClausierService clausierService,
+                               ExclusionRCService exclusionRCService) {  // ajout
         this.garantieService = garantieService;
         this.sousGarantieService = sousGarantieService;
         this.exclusionService = exclusionService;
         this.clausierService = clausierService;
+        this.exclusionRCService = exclusionRCService;
     }
 
     // ---------------- Garanties ----------------
@@ -144,6 +143,18 @@ public class CatalogueController {
     public ResponseEntity<Void> deleteClausier(@PathVariable Long id) {
         clausierService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+    // ---------------- Exclusions RC ----------------
+    @PostMapping("/exclusion-rc")
+    public ResponseEntity<ExclusionRC> createExclusionRC(@RequestBody ExclusionRCRequest request) {
+        ExclusionRC exclusionRC = exclusionRCService.createExclusion(request.getNom());
+        return ResponseEntity.ok(exclusionRC);
+    }
+
+
+    @GetMapping("/exclusion-rc")
+    public ResponseEntity<List<ExclusionRC>> getAllExclusionsRC() {
+        return ResponseEntity.ok(exclusionRCService.getAllExclusions());
     }
 
 }

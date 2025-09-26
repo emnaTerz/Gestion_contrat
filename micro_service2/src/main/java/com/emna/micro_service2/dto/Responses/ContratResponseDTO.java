@@ -15,7 +15,7 @@ public class ContratResponseDTO {
     private Branche branche;
     private String Nom_assure;
     private TypeContrat typeContrat;
-    private Preambule preambule;
+    private String preambule;
     private double primeTTC;
     private LocalDate dateDebut;
     private LocalDate dateFin;
@@ -54,8 +54,13 @@ public class ContratResponseDTO {
     public TypeContrat getTypeContrat() { return typeContrat; }
     public void setTypeContrat(TypeContrat typeContrat) { this.typeContrat = typeContrat; }
 
-    public Preambule getPreambule() { return preambule; }
-    public void setPreambule(Preambule preambule) { this.preambule = preambule; }
+    public String getPreambule() {
+        return preambule;
+    }
+
+    public void setPreambule(String preambule) {
+        this.preambule = preambule;
+    }
 
     public double getPrimeTTC() { return primeTTC; }
     public void setPrimeTTC(double primeTTC) { this.primeTTC = primeTTC; }

@@ -16,6 +16,7 @@ public class ContratDTO {
     private double primeTTC;
     private LocalDate dateDebut;
     private LocalDate dateFin;
+    private String preambule;
 
     // Lock
 
@@ -26,10 +27,20 @@ public class ContratDTO {
     private LocalDateTime startTime;
     private List<SectionDTO> sections;
     private CodeAgence codeAgence;
+    // -------------------- RC EXPLOITATION --------------------
+    private RCExploitationDTO rcExploitation;
 
     public ContratDTO() {}
 
     // Getters & Setters existants
+
+    public String getPreambule() {
+        return preambule;
+    }
+
+    public void setPreambule(String preambule) {
+        this.preambule = preambule;
+    }
 
     public String getNom_assure() {
         return Nom_assure;
@@ -81,5 +92,13 @@ public class ContratDTO {
 
     public void setCodeAgence(CodeAgence codeAgence) {
         this.codeAgence = codeAgence;
+    }
+
+    public RCExploitationDTO getRcExploitation() {
+        return rcExploitation;
+    }
+
+    public void setRcExploitation(RCExploitationDTO rcExploitation) {
+        this.rcExploitation = rcExploitation;
     }
 }

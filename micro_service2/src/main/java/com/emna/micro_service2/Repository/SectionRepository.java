@@ -11,10 +11,13 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SectionRepository extends JpaRepository<Section, Long> {
     List<Section> findByContratNumPolice(String numPolice);  // récupérer toutes les sections d’un contrat
     List<Section> findByContrat_NumPolice(String numPolice);
+    Optional<Section> findByIdentificationAndContratNumPolice(String identification, String numPolice);
+
 
 }

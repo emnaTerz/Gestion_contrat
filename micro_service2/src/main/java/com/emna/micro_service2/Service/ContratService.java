@@ -31,6 +31,11 @@ public class ContratService {
     @Autowired
     private ExclusionGarantieRepository exclusionGarantieRepository;
     @Autowired
+    private RC_ExploitationRepository rcExploitationRepository;
+
+    @Autowired
+    private ExclusionRCRepository exclusionRCRepository;
+    @Autowired
     private AdherentRepository adherentRepository;
 
     @Autowired
@@ -49,8 +54,6 @@ public class ContratService {
     @Autowired
     private ExclusionRepository exclusionRepository;
 
-
-    // ------------------- CREATION -------------------
     @Transactional
     public Contrat creerContratComplet(ContratDTO dto, HttpServletRequest request) throws Exception {
         // -------------------- START TIMER --------------------
@@ -73,51 +76,38 @@ public class ContratService {
         contrat.setFractionnement(dto.getFractionnement());
         contrat.setCodeRenouvellement(dto.getCodeRenouvellement());
         contrat.setBranche(dto.getBranche());
-        contrat.setNom_assure(dto.getNom_assure());
+        contrat.setNom_assure("Mutuelle assurance de l'éducation MAE");
         contrat.setTypeContrat(dto.getTypeContrat());
         contrat.setPrimeTTC(dto.getPrimeTTC());
         contrat.setDateDebut(dto.getDateDebut());
         contrat.setDateFin(dto.getDateFin());
-        contrat.setEditingUser(username);
-        contrat.setEditingStart(LocalDateTime.now());
-        contrat.setCodeAgence(dto.getCodeAgence()); // <-- ajouté
+        contrat.setCodeAgence(dto.getCodeAgence());
+        contrat.setPreambule(dto.getPreambule());
 
         // -------------------- CREATION / ASSOCIATION ADHERENT --------------------
         if (dto.getAdherent() != null) {
-            Optional<Adherent> optionalAdherent = adherentRepository.findById(dto.getAdherent().getCodeId());
+            Adherent adherent = adherentRepository.findById(dto.getAdherent().getCodeId())
+                    .orElseGet(() -> new Adherent(
+                            dto.getAdherent().getCodeId(),
+                            dto.getAdherent().getNomRaison(),
+                            dto.getAdherent().getAdresse(),
+                            dto.getAdherent().isNouveau(),
+                            dto.getAdherent().getActivite()
+                    ));
 
-            Adherent adherent;
-            if (optionalAdherent.isPresent()) {
-                // ✅ Adhérent déjà existant → on l'associe
-                adherent = optionalAdherent.get();
-
-                // Si le DTO dit "nouveau = true" mais il existe déjà → on force à false
-                if (dto.getAdherent().isNouveau()) {
-                    adherent.setNouveau(false);
-                }
-            } else {
-                // ✅ Nouvel adhérent → on le crée
-                adherent = new Adherent(
-                        dto.getAdherent().getCodeId(),
-                        dto.getAdherent().getNomRaison(),
-                        dto.getAdherent().getAdresse(),
-                        dto.getAdherent().isNouveau(), // true ou false selon DTO
-                        dto.getAdherent().getActivite()
-                );
-            }
-
-            // 🔄 Dans les deux cas on met à jour les infos de base
             adherent.setNomRaison(dto.getAdherent().getNomRaison());
             adherent.setAdresse(dto.getAdherent().getAdresse());
             adherent.setActivite(dto.getAdherent().getActivite());
             adherent.setNouveau(dto.getAdherent().isNouveau());
 
             adherentRepository.save(adherent);
-            contrat.setAdherent(adherent);
+
+            contrat.setAdherent(adherent); // associer avant de sauver contrat
         }
 
+        contratRepository.save(contrat); // ✅ sauver contrat maintenant
 
-        // -------------------- CREATION SECTIONS, GARANTIES, EXCLUSIONS --------------------
+        // -------------------- CREATION SECTIONS, GARANTIES, EXCLUSIONS, RC --------------------
         if (dto.getSections() != null) {
             for (SectionDTO sDTO : dto.getSections()) {
                 Section section = new Section();
@@ -127,8 +117,10 @@ public class ContratService {
                 section.setContiguite(sDTO.getContiguite());
                 section.setAvoisinage(sDTO.getAvoisinage());
                 section.setContrat(contrat);
-                sectionRepository.save(section);
 
+                sectionRepository.save(section); // ✅ section persistée
+
+                // --------- GARANTIES CLASSIQUES ---------
                 if (sDTO.getGaranties() != null) {
                     for (GarantieSectionDTO gDTO : sDTO.getGaranties()) {
                         GarantieSection gs = new GarantieSection();
@@ -139,6 +131,7 @@ public class ContratService {
                         gs.setMinimum(gDTO.getMinimum());
                         gs.setCapitale(gDTO.getCapitale());
                         gs.setPrimeNET(gDTO.getPrimeNET());
+
                         garantieSectionRepository.save(gs);
 
                         if (gDTO.getExclusions() != null) {
@@ -147,9 +140,58 @@ public class ContratService {
                                 ex.setGarantieSection(gs);
                                 ex.setExclusion(findExclusionById(exDTO.getExclusionId()));
                                 exclusionGarantieRepository.save(ex);
+
+                                System.out.println("GarantieSection sauvegardée :");
+                                System.out.println("  ID Section = " + (gs.getSection() != null ? gs.getSection().getId() : "null"));
+                                System.out.println("  SousGarantie = " + (gs.getSousGarantie() != null ? gs.getSousGarantie().getNom() : "null"));
+                                System.out.println("  Franchise = " + gs.getFranchise());
+                                System.out.println("  Maximum = " + gs.getMaximum());
+                                System.out.println("  Minimum = " + gs.getMinimum());
+                                System.out.println("  Capitale = " + gs.getCapitale());
+                                System.out.println("  PrimeNET = " + gs.getPrimeNET());
                             }
                         }
                     }
+                }
+
+                // --------- RC EXPLOITATION ---------
+                if (sDTO.isRcExploitationActive() && sDTO.getRcExploitation() != null) {
+                    RCExploitationDTO rcDTO = sDTO.getRcExploitation();
+
+                    RC_Exploitation rc = new RC_Exploitation();
+                    rc.setObjetDeLaGarantie(rcDTO.getObjetDeLaGarantie());
+                    rc.setLimiteAnnuelleDomCorporels(rcDTO.getLimiteAnnuelleDomCorporels());
+                    rc.setLimiteAnnuelleDomMateriels(rcDTO.getLimiteAnnuelleDomMateriels());
+                    rc.setLimiteParSinistre(rcDTO.getLimiteParSinistre());
+                    rc.setFranchise(rcDTO.getFranchise());
+
+                    rcExploitationRepository.save(rc); // ✅ sauver RC avant associations
+                    System.out.println("RC_Exploitation sauvegardé :");
+                    System.out.println("  ObjetDeLaGarantie = " + rc.getObjetDeLaGarantie());
+                    System.out.println("  LimiteAnnuelleDomCorporels = " + rc.getLimiteAnnuelleDomCorporels());
+                    System.out.println("  LimiteAnnuelleDomMateriels = " + rc.getLimiteAnnuelleDomMateriels());
+                    System.out.println("  LimiteParSinistre = " + rc.getLimiteParSinistre());
+                    System.out.println("  Franchise = " + rc.getFranchise());
+                    // Ajouter les exclusions RC
+                    if (rcDTO.getExclusionsRcIds() != null) {
+                        if (rcDTO.getExclusionsRcIds() != null && !rcDTO.getExclusionsRcIds().isEmpty()) {
+                            List<ExclusionRC> exclusions = new ArrayList<>();
+                            for (Long id : rcDTO.getExclusionsRcIds()) {
+                                ExclusionRC ex = findExclusionRCById(id);
+                                exclusions.add(ex);
+                                System.out.println("  ExclusionRC ajoutée : ID = " + ex.getId() + ", Nom = " + ex.getNom());
+
+                            }
+
+                            rc.setExclusionsRc(exclusions);
+                            rcExploitationRepository.save(rc); // ✅ sauvegarde après exclusions
+                        }
+                    }
+
+                        // Associer RC à la section
+                    section.setRcExploitation(rc);
+                    sectionRepository.save(section); // resave section
+
                 }
             }
         }
@@ -160,15 +202,15 @@ public class ContratService {
                 ? Duration.between(start, LocalDateTime.now()).toMillis()
                 : 0;
 
-
         historiqueContratService.enregistrerHistorique(
                 "Création contrat complet " + contrat.getNumPolice(),
                 username,
                 tempsRealisation
         );
-
         return contrat;
     }
+
+
 
     @Transactional
     public Contrat modifierContrat(ContratDTO dto, HttpServletRequest request) throws Exception {
@@ -189,6 +231,8 @@ public class ContratService {
         // 3️⃣ Mettre à jour les champs simples
         mapDtoToEntity(dto, contrat);
         contratRepository.save(contrat);
+
+        // 4️⃣ Mettre à jour l’adhérent
         AdherentDTO aDto = dto.getAdherent();
         if (aDto != null) {
             Adherent adherent = contrat.getAdherent();
@@ -200,23 +244,41 @@ public class ContratService {
             adherent.setNomRaison(aDto.getNomRaison());
             adherent.setAdresse(aDto.getAdresse());
             adherent.setActivite(aDto.getActivite());
-            adherent.setNouveau(aDto.isNouveau());  // 🔹 Assure que le boolean est correctement mis à jour
+            adherent.setNouveau(aDto.isNouveau());
             adherentRepository.save(adherent);
         }
 
-        // 4️⃣ Supprimer les anciennes sections, garanties et exclusions
+        // 5️⃣ Supprimer les anciennes sections, garanties, exclusions et RC si elles existent
         List<Section> anciennesSections = sectionRepository.findByContrat_NumPolice(contrat.getNumPolice());
         for (Section sec : anciennesSections) {
+            // Garanties et exclusions
             List<GarantieSection> garanties = garantieSectionRepository.findBySection_Id(sec.getId());
             for (GarantieSection g : garanties) {
                 List<ExclusionGarantie> exclusions = exclusionGarantieRepository.findByGarantieSection_Id(g.getId());
                 exclusionGarantieRepository.deleteAll(exclusions);
             }
             garantieSectionRepository.deleteAll(garanties);
+
+            RC_Exploitation rc = sec.getRcExploitation();
+            if (rc != null) {
+                // 1️⃣ Dissocier toutes les sections qui pointent vers ce RC
+                sec.setRcExploitation(null);
+                sectionRepository.save(sec);
+
+                // 2️⃣ Supprimer les associations d'exclusions RC
+                if (rc.getExclusionsRc() != null) {
+                    rc.getExclusionsRc().clear();
+                    rcExploitationRepository.save(rc);
+                }
+
+                // 3️⃣ Supprimer le RC maintenant qu'il n'est plus référencé
+                rcExploitationRepository.delete(rc);
+            }
+
         }
         sectionRepository.deleteAll(anciennesSections);
 
-        // 5️⃣ Créer les nouvelles sections et garanties
+        // 6️⃣ Créer les nouvelles sections, garanties et RC
         for (SectionDTO sDto : dto.getSections()) {
             Section section = new Section();
             section.setIdentification(sDto.getIdentification());
@@ -227,44 +289,71 @@ public class ContratService {
             section.setContrat(contrat);
             sectionRepository.save(section);
 
-            for (GarantieSectionDTO gDto : sDto.getGaranties()) {
-                GarantieSection garantie = new GarantieSection();
-                garantie.setFranchise(gDto.getFranchise());
-                garantie.setSection(section);
+            // Garanties classiques
+            if (sDto.getGaranties() != null) {
+                for (GarantieSectionDTO gDto : sDto.getGaranties()) {
+                    GarantieSection garantie = new GarantieSection();
+                    garantie.setFranchise(gDto.getFranchise());
+                    garantie.setSection(section);
+                    garantie.setSousGarantie(sousGarantieRepository.findById(gDto.getSousGarantieId())
+                            .orElseThrow(() -> new Exception("SousGarantie introuvable")));
+                    garantie.setMaximum(gDto.getMaximum());
+                    garantie.setMinimum(gDto.getMinimum());
+                    garantie.setCapitale(gDto.getCapitale());
+                    garantie.setPrimeNET(gDto.getPrimeNET());
+                    garantie.setPrimeTTC(gDto.getPrimeTTC());
+                    garantieSectionRepository.save(garantie);
 
-                // ⚡ Récupérer l'entité SousGarantie depuis l'ID
-                SousGarantie sousGarantie = sousGarantieRepository.findById(gDto.getSousGarantieId())
-                        .orElseThrow(() -> new Exception("SousGarantie introuvable"));
-                garantie.setSousGarantie(sousGarantie);
-
-
-                garantie.setMaximum(gDto.getMaximum());
-                garantie.setMinimum(gDto.getMinimum());
-                garantie.setCapitale(gDto.getCapitale());
-                garantie.setPrimeNET(gDto.getPrimeNET());
-                garantie.setPrimeTTC(gDto.getPrimeTTC());
-                garantieSectionRepository.save(garantie);
-
-                // Exclusions
-                for (ExclusionGarantieDTO eDto : gDto.getExclusions()) {
-                    Exclusion exclusion = exclusionRepository.findById(eDto.getExclusionId())
-                            .orElseThrow(() -> new Exception("Exclusion introuvable"));
-                    ExclusionGarantie exG = new ExclusionGarantie();
-                    exG.setGarantieSection(garantie);
-                    exG.setExclusion(exclusion);
-                    exclusionGarantieRepository.save(exG);
+                    if (gDto.getExclusions() != null) {
+                        for (ExclusionGarantieDTO eDto : gDto.getExclusions()) {
+                            Exclusion exclusion = exclusionRepository.findById(eDto.getExclusionId())
+                                    .orElseThrow(() -> new Exception("Exclusion introuvable"));
+                            ExclusionGarantie exG = new ExclusionGarantie();
+                            exG.setGarantieSection(garantie);
+                            exG.setExclusion(exclusion);
+                            exclusionGarantieRepository.save(exG);
+                        }
+                    }
                 }
+            }
+
+            // RC Exploitation
+            if (sDto.isRcExploitationActive() && sDto.getRcExploitation() != null) {
+                RCExploitationDTO rcDTO = sDto.getRcExploitation();
+                RC_Exploitation rc = new RC_Exploitation();
+                rc.setObjetDeLaGarantie(rcDTO.getObjetDeLaGarantie());
+                rc.setLimiteAnnuelleDomCorporels(rcDTO.getLimiteAnnuelleDomCorporels());
+                rc.setLimiteAnnuelleDomMateriels(rcDTO.getLimiteAnnuelleDomMateriels());
+                rc.setLimiteParSinistre(rcDTO.getLimiteParSinistre());
+                rc.setFranchise(rcDTO.getFranchise());
+
+                // Sauvegarder RC avant d'ajouter les exclusions
+                rcExploitationRepository.save(rc);
+
+                // Ajouter les exclusions RC
+                if (rcDTO.getExclusionsRcIds() != null && !rcDTO.getExclusionsRcIds().isEmpty()) {
+                    List<ExclusionRC> exclusions = new ArrayList<>();
+                    for (Long exId : rcDTO.getExclusionsRcIds()) {
+                        ExclusionRC ex = findExclusionRCById(exId);
+                        exclusions.add(ex);
+                    }
+                    rc.setExclusionsRc(exclusions);
+                    rcExploitationRepository.save(rc); // sauvegarde après associations
+                }
+
+                // Associer le RC à la section
+                section.setRcExploitation(rc);
+                sectionRepository.save(section);
             }
         }
 
-        // 6️⃣ Historique
-        logHistoriqueModification(contrat, username);
 
-        // 7️⃣ Déverrouillage
+        // 8️⃣ Déverrouillage
         unlockContratInternal(contrat);
 
         return contrat;
     }
+
 
     // ------------------- LOCK / UNLOCK -------------------
 
@@ -356,7 +445,8 @@ public class ContratService {
         return contrat.getEditingUser() == null;
     }
 
-    @Transactional(readOnly = true)
+
+   @Transactional(readOnly = true)
     public ContratResponseDTO getContratComplet(String numPolice, HttpServletRequest request) throws Exception {
         // Vérification et récupération de l'utilisateur
         String username = validateTokenAndGetUser(request);
@@ -408,7 +498,36 @@ public class ContratService {
             sDTO.setAvoisinage(section.getAvoisinage());
             sDTO.setNumPolice(numPolice);
 
-            // Garanties
+            // ---------------- RC Exploitation ----------------
+            RC_Exploitation rc = section.getRcExploitation();
+            if (rc != null) {
+                sDTO.setRcExploitationActive(true);
+
+                RCExploitationResponseDTO rcDTO = new RCExploitationResponseDTO();
+                rcDTO.setLimiteAnnuelleDomCorporels(rc.getLimiteAnnuelleDomCorporels());
+                rcDTO.setLimiteAnnuelleDomMateriels(rc.getLimiteAnnuelleDomMateriels());
+                rcDTO.setLimiteParSinistre(rc.getLimiteParSinistre());
+                rcDTO.setFranchise(rc.getFranchise());
+                rcDTO.setObjetDeLaGarantie(rc.getObjetDeLaGarantie());
+
+                // Exclusions RC
+                List<ExclusionRCResponse> exclusionsRCDTOs = new ArrayList<>();
+                if (rc.getExclusionsRc() != null) {
+                    for (ExclusionRC exRC : rc.getExclusionsRc()) {
+                        ExclusionRCResponse exDTO = new ExclusionRCResponse();
+                        exDTO.setId(exRC.getId());
+                        exDTO.setNom(exRC.getNom());
+                        exclusionsRCDTOs.add(exDTO);
+                    }
+                }
+                rcDTO.setExclusionsRc(exclusionsRCDTOs);
+
+                sDTO.setRcExploitation(rcDTO);
+            } else {
+                sDTO.setRcExploitationActive(false);
+            }
+
+            // ---------------- Garanties ----------------
             List<GarantieSection> garanties = garantieSectionRepository.findBySection_Id(section.getId());
             List<GarantieSectionResponseDTO> gsDTOs = new ArrayList<>();
             for (GarantieSection gs : garanties) {
@@ -437,12 +556,16 @@ public class ContratService {
                 gsDTOs.add(gsDTO);
             }
             sDTO.setGaranties(gsDTOs);
+
             sectionDTOs.add(sDTO);
         }
+
         contratDTO.setSections(sectionDTOs);
 
         return contratDTO;
     }
+
+
     public boolean existsByNumPolice(String numPolice) {
         return contratRepository.existsByNumPolice(numPolice);
     }
@@ -456,6 +579,8 @@ public class ContratService {
         if (!jwtService.isTokenValid(token, username)) throw new Exception("Token invalide");
         return username;
     }
+
+
 
     private Contrat getContratLockedByUser(String numPolice, String username) throws Exception {
         Contrat contrat = contratRepository.findById(numPolice)
@@ -489,6 +614,10 @@ public class ContratService {
         return exclusionRepository.findById(id)
                 .orElseThrow(() -> new Exception("Exclusion introuvable avec id : " + id));
     }
+    private ExclusionRC findExclusionRCById(Long id) throws Exception {
+        return exclusionRCRepository.findById(id)
+                .orElseThrow(() -> new Exception("ExclusionRC introuvable pour l'id : " + id));
+    }
 
     // ------------------- MAPPING DTO ↔ ENTITY -------------------
     private void mapDtoToEntity(ContratDTO dto, Contrat contrat) {
@@ -503,6 +632,7 @@ public class ContratService {
         contrat.setDateFin(dto.getDateFin());
         contrat.setAdherent(dto.getAdherent() != null ? mapAdherentDtoToEntity(dto.getAdherent()) : null);
         contrat.setCodeAgence(dto.getCodeAgence()); // <-- ajouté
+        contrat.setPreambule(dto.getPreambule());
     }
 
     private Adherent mapAdherentDtoToEntity(com.emna.micro_service2.dto.AdherentDTO dto) {

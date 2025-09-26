@@ -14,6 +14,9 @@ public class Section {
     private String natureConstruction;
     private String contiguite;
     private String avoisinage;
+    @ManyToOne
+    @JoinColumn(name = "rc_exploitation_id")
+    private RC_Exploitation rcExploitation;
 
     @ManyToOne
     @JoinColumn(name = "num_police", referencedColumnName = "numPolice")
@@ -52,4 +55,12 @@ public class Section {
 
     public Contrat getContrat() { return contrat; }
     public void setContrat(Contrat contrat) { this.contrat = contrat; }
+
+    public RC_Exploitation getRcExploitation() {
+        return rcExploitation;
+    }
+
+    public void setRcExploitation(RC_Exploitation rcExploitation) {
+        this.rcExploitation = rcExploitation;
+    }
 }
