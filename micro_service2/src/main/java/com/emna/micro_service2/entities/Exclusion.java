@@ -14,11 +14,12 @@ public class Exclusion {
     // Relation Many-to-One avec Garantie
     @ManyToOne
     @JoinColumn(name = "garantie_id")
-    private SousGarantie garantie;
+    private Garantie garantie;
 
     public Exclusion() {}
 
-    public Exclusion(String nom, SousGarantie garantie) {
+    public Exclusion(Long id, String nom, Garantie garantie) {
+        this.id = id;
         this.nom = nom;
         this.garantie = garantie;
     }
@@ -30,6 +31,11 @@ public class Exclusion {
     public String getNom() { return nom; }
     public void setNom(String nom) { this.nom = nom; }
 
-    public SousGarantie getGarantie() { return garantie; }
-    public void setGarantie(SousGarantie garantie) { this.garantie = garantie; }
+    public Garantie getGarantie() {
+        return garantie;
+    }
+
+    public void setGarantie(Garantie garantie) {
+        this.garantie = garantie;
+    }
 }

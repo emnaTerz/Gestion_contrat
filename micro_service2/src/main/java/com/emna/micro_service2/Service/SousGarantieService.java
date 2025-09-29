@@ -40,8 +40,7 @@ public class SousGarantieService {
 
     // Supprimer par ID
     public void delete(Long id) {
-        clausierRepository.deleteBySousGarantieId(id);;
-        exclusionRepository.deleteBySousGarantieId(id);
+
         sousGarantieRepository.deleteById(id);
     }
     public List<SousGarantie> getByGarantie(Long garantieId) {

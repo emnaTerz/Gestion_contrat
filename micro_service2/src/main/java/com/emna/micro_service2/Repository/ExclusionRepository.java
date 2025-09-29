@@ -17,6 +17,6 @@ public interface ExclusionRepository extends JpaRepository<Exclusion, Long> {
 
     @Modifying
     @Transactional
-    @Query("DELETE FROM Exclusion e WHERE e.garantie.id = :sousGarantieId")
-    void deleteBySousGarantieId(@Param("sousGarantieId") Long sousGarantieId);
+    @Query("DELETE FROM Exclusion e WHERE e.garantie.id = :GarantieId")
+    void deleteByGarantieId(@Param("GarantieId") Long GarantieId);
 }

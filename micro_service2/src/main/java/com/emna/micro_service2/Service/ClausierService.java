@@ -35,7 +35,7 @@ public class ClausierService {
 
     // Obtenir par sous-garantie
     public List<Clausier> getBySousGarantie(Long sousGarantieId) {
-        return clausierRepository.findBySousGarantieId(sousGarantieId);
+        return clausierRepository.findByGarantieId(sousGarantieId);
     }
 
 

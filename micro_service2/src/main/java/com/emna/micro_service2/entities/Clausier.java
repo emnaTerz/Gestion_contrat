@@ -13,16 +13,16 @@ public class Clausier {
 
     private String nom;
 
-    @ManyToOne
-    @JoinColumn(name = "sous_garantie_id") // clé étrangère vers SousGarantie
-    private SousGarantie sousGarantie;
 
+    @ManyToOne
+    @JoinColumn(name = "garantie_id")
+    private Garantie garantie;
 
     public Clausier() {}
 
-    public Clausier(String nom, SousGarantie sousGarantie) {
+    public Clausier(String nom, Garantie garantie) {
         this.nom = nom;
-        this.sousGarantie = sousGarantie;
+        this.garantie = garantie;
     }
 
     // Getters & Setters
@@ -32,7 +32,12 @@ public class Clausier {
     public String getNom() { return nom; }
     public void setNom(String nom) { this.nom = nom; }
 
-    public SousGarantie getGarantie() { return sousGarantie; }
-    public void setGarantie(SousGarantie sousGarantie) { this.sousGarantie = sousGarantie; }
+    public Garantie getGarantie() {
+        return garantie;
+    }
+
+    public void setGarantie(Garantie garantie) {
+        this.garantie = garantie;
+    }
 }
 

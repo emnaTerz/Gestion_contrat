@@ -2,6 +2,8 @@ package com.emna.micro_service2.Service;
 
 
 
+import com.emna.micro_service2.Repository.ClausierRepository;
+import com.emna.micro_service2.Repository.ExclusionRepository;
 import com.emna.micro_service2.Repository.SousGarantieRepository;
 import com.emna.micro_service2.entities.Garantie;
 import com.emna.micro_service2.Repository.GarantieRepository;
@@ -16,10 +18,14 @@ public class GarantieService {
     @Autowired
     private SousGarantieRepository sousGarantieRepository;
     private final GarantieRepository garantieRepository;
+    private final ClausierRepository clausierRepository;
 
-    public GarantieService(SousGarantieRepository sousGarantieRepository, GarantieRepository garantieRepository) {
-        this.sousGarantieRepository = sousGarantieRepository;
+    private final ExclusionRepository exclusionRepository;
+
+    public GarantieService( GarantieRepository garantieRepository, ClausierRepository clausierRepository, ExclusionRepository exclusionRepository) {
         this.garantieRepository = garantieRepository;
+        this.clausierRepository = clausierRepository;
+        this.exclusionRepository = exclusionRepository;
     }
 
     // Créer ou mettre à jour une garantie
@@ -39,7 +45,8 @@ public class GarantieService {
 
     // Supprimer par ID
     public void delete(Long id) {
-
+        clausierRepository.deleteByGarantieId(id);;
+        exclusionRepository.deleteByGarantieId(id);
         sousGarantieRepository.deleteByGarantieId(id);
         garantieRepository.deleteById(id);
     }

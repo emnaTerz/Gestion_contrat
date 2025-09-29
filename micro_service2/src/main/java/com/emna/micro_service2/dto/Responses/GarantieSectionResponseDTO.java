@@ -14,6 +14,7 @@ public class GarantieSectionResponseDTO {
     private Double capitale;
     private Double primeNet;
     private List<ExclusionGarantieResponseDTO> exclusions;
+    private GarantieResponseDTO garantieParent;
 
     public GarantieSectionResponseDTO() {}
 
@@ -56,4 +57,12 @@ public class GarantieSectionResponseDTO {
 
     public List<ExclusionGarantieResponseDTO> getExclusions() { return exclusions; }
     public void setExclusions(List<ExclusionGarantieResponseDTO> exclusions) { this.exclusions = exclusions; }
+
+    public GarantieResponseDTO getGarantieParent() {
+        return garantieParent;
+    }
+
+    public void setGarantieParent(GarantieResponseDTO garantieParent) {
+        this.garantieParent = garantieParent;
+    }
 }

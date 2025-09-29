@@ -15,9 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ContratService {
@@ -53,6 +51,12 @@ public class ContratService {
     private SousGarantieRepository sousGarantieRepository;
     @Autowired
     private ExclusionRepository exclusionRepository;
+
+
+    @Autowired
+    private TarifService TarifService;
+
+
 
     @Transactional
     public Contrat creerContratComplet(ContratDTO dto, HttpServletRequest request) throws Exception {
@@ -164,14 +168,10 @@ public class ContratService {
                     rc.setLimiteAnnuelleDomMateriels(rcDTO.getLimiteAnnuelleDomMateriels());
                     rc.setLimiteParSinistre(rcDTO.getLimiteParSinistre());
                     rc.setFranchise(rcDTO.getFranchise());
+                    rc.setPrimeNET(rcDTO.getPrimeNET());
 
                     rcExploitationRepository.save(rc); // ✅ sauver RC avant associations
-                    System.out.println("RC_Exploitation sauvegardé :");
-                    System.out.println("  ObjetDeLaGarantie = " + rc.getObjetDeLaGarantie());
-                    System.out.println("  LimiteAnnuelleDomCorporels = " + rc.getLimiteAnnuelleDomCorporels());
-                    System.out.println("  LimiteAnnuelleDomMateriels = " + rc.getLimiteAnnuelleDomMateriels());
-                    System.out.println("  LimiteParSinistre = " + rc.getLimiteParSinistre());
-                    System.out.println("  Franchise = " + rc.getFranchise());
+
                     // Ajouter les exclusions RC
                     if (rcDTO.getExclusionsRcIds() != null) {
                         if (rcDTO.getExclusionsRcIds() != null && !rcDTO.getExclusionsRcIds().isEmpty()) {
@@ -195,7 +195,10 @@ public class ContratService {
                 }
             }
         }
-
+        Tarif tarif = TarifService.getTarifByBranche(contrat.getBranche());
+        double primeTTC = calculerPrimeTTC(contrat, tarif);
+        contrat.setPrimeTTC(primeTTC);
+        contratRepository.save(contrat);
         // -------------------- HISTORIQUE --------------------
         LocalDateTime start = dto.getStartTime(); // reçu du front
         long tempsRealisation = start != null
@@ -207,6 +210,7 @@ public class ContratService {
                 username,
                 tempsRealisation
         );
+
         return contrat;
     }
 
@@ -326,6 +330,7 @@ public class ContratService {
                 rc.setLimiteAnnuelleDomMateriels(rcDTO.getLimiteAnnuelleDomMateriels());
                 rc.setLimiteParSinistre(rcDTO.getLimiteParSinistre());
                 rc.setFranchise(rcDTO.getFranchise());
+                rc.setPrimeNET(rcDTO.getPrimeNET());
 
                 // Sauvegarder RC avant d'ajouter les exclusions
                 rcExploitationRepository.save(rc);
@@ -346,7 +351,9 @@ public class ContratService {
                 sectionRepository.save(section);
             }
         }
+        Tarif tarif = TarifService.getTarifByBranche(contrat.getBranche());
 
+        contrat.setPrimeTTC(calculerPrimeTTC(contrat,tarif));
 
         // 8️⃣ Déverrouillage
         unlockContratInternal(contrat);
@@ -401,9 +408,10 @@ public class ContratService {
     }
 
     // ----------------------- UNLOCK -----------------------
-    @Transactional
+   /* @Transactional
     public void unlockContrat(String numPolice, HttpServletRequest request, boolean cancelled, LocalDateTime startTime) throws Exception {
         String username = jwtService.extractUserName(jwtService.getTokenFromRequest(request));
+        System.out.println("numPolice=" + numPolice + ", cancelled=" + cancelled + ", startTime=" + startTime);
 
         Contrat contrat = contratRepository.findById(numPolice)
                 .orElseThrow(() -> new Exception("Contrat introuvable"));
@@ -428,8 +436,45 @@ public class ContratService {
         contrat.setEditingStart(null);
         contratRepository.save(contrat);
     }
+*/
+    @Transactional
+    public void unlockContrat(String numPolice, HttpServletRequest request, boolean cancelled, LocalDateTime startTime) throws Exception {
+        String username = jwtService.extractUserName(jwtService.getTokenFromRequest(request));
 
+        Contrat contrat = contratRepository.findById(numPolice)
+                .orElseThrow(() -> new Exception("Contrat introuvable"));
 
+        // Liste des utilisateurs ADMIN (à adapter avec vos vrais admins)
+        List<String> adminUsers = Arrays.asList("med.barhoumi", "ADMIN");
+
+        boolean isOwner = contrat.getEditingUser() != null && contrat.getEditingUser().equals(username);
+        boolean isAdmin = adminUsers.contains(username);
+
+        if (!isOwner && !isAdmin) {
+            throw new Exception("Vous ne pouvez pas déverrouiller ce contrat. Verrouillé par: " + contrat.getEditingUser());
+        }
+
+        // Calcul du temps de réalisation
+        long tempsRealisation = startTime != null
+                ? java.time.Duration.between(startTime, LocalDateTime.now()).toMillis()
+                : 0;
+
+        String action = cancelled
+                ? "Tentative modification contrat " + contrat.getNumPolice() + " (annulée)"
+                : "Fin modification contrat " + contrat.getNumPolice();
+
+        // Ajouter une note si déverrouillé par un admin
+        if (isAdmin && !isOwner) {
+            action += " (déverrouillé par admin)";
+        }
+
+        historiqueContratService.enregistrerHistorique(action, username, tempsRealisation);
+
+        // Déverrouillage
+        contrat.setEditingUser(null);
+        contrat.setEditingStart(null);
+        contratRepository.save(contrat);
+    }
 
     private void unlockContratInternal(Contrat contrat) {
         contrat.setEditingUser(null);
@@ -509,6 +554,7 @@ public class ContratService {
                 rcDTO.setLimiteParSinistre(rc.getLimiteParSinistre());
                 rcDTO.setFranchise(rc.getFranchise());
                 rcDTO.setObjetDeLaGarantie(rc.getObjetDeLaGarantie());
+                rcDTO.setPrimeNET(rc.getPrimeNET());
 
                 // Exclusions RC
                 List<ExclusionRCResponse> exclusionsRCDTOs = new ArrayList<>();
@@ -541,6 +587,13 @@ public class ContratService {
                 gsDTO.setCapitale(gs.getCapitale());
                 gsDTO.setPrimeNet(gs.getPrimeNET());
 
+                if (gs.getSousGarantie() != null && gs.getSousGarantie().getGarantie() != null) {
+                    Garantie garantieParent = gs.getSousGarantie().getGarantie();
+                    GarantieResponseDTO garantieParentDTO = new GarantieResponseDTO();
+                    garantieParentDTO.setId(garantieParent.getId());
+                    garantieParentDTO.setLibelle(garantieParent.getLibelle());
+                    gsDTO.setGarantieParent(garantieParentDTO);
+                }
                 // Exclusions
                 List<ExclusionGarantie> exclusions = exclusionGarantieRepository.findByGarantieSection_Id(gs.getId());
                 List<ExclusionGarantieResponseDTO> exDTOs = new ArrayList<>();
@@ -592,18 +645,7 @@ public class ContratService {
         return contrat;
     }
 
-    private void logHistoriqueModification(Contrat contrat, String username) {
-        LocalDateTime start = contrat.getEditingStart();
-        long tempsRealisation = start != null
-                ? java.time.Duration.between(start, LocalDateTime.now()).toMillis()
-                : 0;
 
-        historiqueContratService.enregistrerHistorique(
-                "Modification contrat " + contrat.getNumPolice(),
-                username,
-                tempsRealisation
-        );
-    }
 
     private SousGarantie findSousGarantieById(Long id) throws Exception {
         return sousGarantieRepository.findById(id)
@@ -713,5 +755,58 @@ public class ContratService {
     }
 
 
+    public double calculerPrimeTTC(Contrat contrat, Tarif tarif) {
+        double sommePrimesNettes = 0.0;
+
+        List<Section> sections = sectionRepository.findByContrat_NumPolice(contrat.getNumPolice());
+
+        // Calculer le RC unique une seule fois
+        boolean rcCalcule = false;
+        double primeRC = 0.0;
+
+        for (Section section : sections) {
+
+            // Garanties classiques
+            List<GarantieSection> garanties = garantieSectionRepository.findBySection_Id(section.getId());
+            for (GarantieSection gs : garanties) {
+                sommePrimesNettes += gs.getPrimeNET() != null ? gs.getPrimeNET() : 0;
+            }
+
+            // RC unique (calculer une seule fois)
+            if (!rcCalcule) {
+                RC_Exploitation rc = section.getRcExploitation();
+                if (rc != null && rc.getPrimeNET() != null) {
+                    primeRC = rc.getPrimeNET();
+                }
+                rcCalcule = true;
+            }
+        }
+
+        sommePrimesNettes += primeRC;
+
+        // Calcul de base
+        double primeTTC = (sommePrimesNettes + tarif.getFq())
+                + ((sommePrimesNettes + 2) * tarif.getTaux())
+                + tarif.getFeFg();
+
+        // Ajouter prix adhésion si nouvel adhérent
+        if (contrat.getAdherent() != null && contrat.getAdherent().isNouveau()) {
+            primeTTC += tarif.getPrixAdhesion();
+        }
+
+        // Ajustement selon le fractionnement
+        int diviseur = 1;
+        if (contrat.getFractionnement() != null) {
+            switch (contrat.getFractionnement()) {
+                case ZERO -> diviseur = 1;
+                case UN   -> diviseur = 2;
+                case DEUX -> diviseur = 3;
+            }
+        }
+
+        primeTTC = primeTTC / diviseur;
+
+        return primeTTC;
+    }
 
 }

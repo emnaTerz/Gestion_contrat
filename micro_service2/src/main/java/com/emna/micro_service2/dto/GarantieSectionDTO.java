@@ -1,5 +1,7 @@
 package com.emna.micro_service2.dto;
 
+import com.emna.micro_service2.dto.Responses.GarantieResponseDTO;
+
 import java.util.List;
 
 public class GarantieSectionDTO {
@@ -12,6 +14,8 @@ public class GarantieSectionDTO {
     private Double capitale;
     private Double primeNET;
     private Double primeTTC;
+
+
 
     // ----------------- NOUVEAU -----------------
     private List<ExclusionGarantieDTO> exclusions;

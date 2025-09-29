@@ -10,6 +10,7 @@ import com.emna.micro_service2.Service.ContratService;
 import com.emna.micro_service2.entities.HistoriqueContrat;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
@@ -19,7 +20,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/contrat")
@@ -62,9 +66,11 @@ public class ContratController {
     public ResponseEntity<?> unlockContrat(
             @PathVariable String numPolice,
             @RequestParam boolean cancelled,
-            @RequestParam LocalDateTime startTime, // ✅ envoyé par le front
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             HttpServletRequest request
     ) throws Exception {
+        System.out.println("numPolice=" + numPolice + ", cancelled=" + cancelled + ", startTime=" + startTime);
+
         contratService.unlockContrat(numPolice, request, cancelled, startTime);
         return ResponseEntity.ok("Contrat déverrouillé");
     }
@@ -74,6 +80,16 @@ public class ContratController {
         return ResponseEntity.ok(contrat);
     }
 
+    @GetMapping("/{numPolice}/lock-status")
+    public ResponseEntity<Boolean> checkLockStatus(@PathVariable String numPolice) {
+        try {
+            boolean isUnlocked = contratService.isUnlocked(numPolice);
+            return ResponseEntity.ok(!isUnlocked); // Retourne true si verrouillé, false si déverrouillé
+        } catch (Exception e) {
+            // En cas d'erreur, on considère que le contrat est verrouillé par sécurité
+            return ResponseEntity.ok(true);
+        }
+    }
 
 
     @GetMapping("/exists/{numPolice}")
