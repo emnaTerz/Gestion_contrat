@@ -1,6 +1,7 @@
 package com.emna.micro_service2.entities;
 
 import com.emna.micro_service2.entities.enums.Branche;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 @Entity
@@ -8,6 +9,7 @@ import jakarta.persistence.*;
 public class Tarif {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty("id")
     private Long id;
     private Branche branche;      // Branche du contrat
     private double fq;           // Frais de gestion ou FQ
@@ -25,6 +27,14 @@ public class Tarif {
 
     // Getters & Setters
 
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public Branche getBranche() {
         return branche;

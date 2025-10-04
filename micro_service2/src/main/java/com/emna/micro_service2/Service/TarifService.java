@@ -6,6 +6,8 @@ import com.emna.micro_service2.Repository.TarifRepository;
 import com.emna.micro_service2.entities.Tarif;
 import com.emna.micro_service2.entities.enums.Branche;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,17 +18,37 @@ public class TarifService {
     private final TarifRepository tarifRepository;
     private final JwtService jwtService; // service pour le token
 
-    public TarifService(TarifRepository tarifRepository, JwtService jwtService) {
+    private UserDetailsService userDetailsService;
+
+    public TarifService(TarifRepository tarifRepository, JwtService jwtService, UserDetailsService userDetailsService) {
         this.tarifRepository = tarifRepository;
         this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
     }
-
-    private void validateToken(HttpServletRequest request) throws Exception {
+ /* private void validateToken(HttpServletRequest request) throws Exception {
         String token = jwtService.getTokenFromRequest(request);
         if (token == null) throw new Exception("Token manquant");
         String username = jwtService.extractUserName(token);
         if (!jwtService.isTokenValid(token, username)) throw new Exception("Token invalide");
+    }*/
+
+
+    private void validateToken(HttpServletRequest request) throws Exception {
+        String token = jwtService.getTokenFromRequest(request);
+        if (token == null) throw new Exception("Token manquant");
+
+        String username = jwtService.extractUserName(token);
+        if (username == null || username.isEmpty()) throw new Exception("Token invalide");
+
+        // Charger UserDetails à partir du username
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+        // Vérifier la validité du token avec UserDetails
+        if (!jwtService.isTokenValid(token, userDetails)) {
+            throw new Exception("Token invalide");
+        }
     }
+
 
     public Tarif createTarif(Tarif tarif, HttpServletRequest request) throws Exception {
         validateToken(request);
@@ -50,9 +72,9 @@ public class TarifService {
         return tarifRepository.findAll();
     }
 
-    public Tarif getTarifByBranche(Branche branche) throws Exception {
+    // Dans TarifService
+    public Tarif getTarifByBranche(Branche branche) {
         return tarifRepository.findByBranche(branche)
-                .orElseThrow(() -> new Exception("Tarif pour la branche " + branche + " introuvable"));
+                .orElseThrow(() -> new RuntimeException("Tarif non trouvé pour la branche: " + branche));
     }
-
 }

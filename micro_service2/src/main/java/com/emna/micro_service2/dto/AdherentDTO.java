@@ -8,7 +8,9 @@ public class AdherentDTO {
     private boolean nouveau;
 
     public AdherentDTO() {}
-
+    public AdherentDTO(String nomRaison) { // constructeur avec paramètre
+        this.nomRaison = nomRaison;
+    }
     // Getters & Setters
     public String getCodeId() { return codeId; }
     public void setCodeId(String codeId) { this.codeId = codeId; }

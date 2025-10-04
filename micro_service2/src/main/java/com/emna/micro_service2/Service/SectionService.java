@@ -27,7 +27,7 @@ public class SectionService {
     private JwtService jwtService;
 
     // ------------------- CREATE OR UPDATE -------------------
-    @Transactional
+   /* @Transactional
     public Section createOrUpdateSection(SectionDTO dto, HttpServletRequest request) throws Exception {
         // Récupération et validation du token
         String token = jwtService.getTokenFromRequest(request);
@@ -54,7 +54,7 @@ public class SectionService {
         // Sauvegarde (auto-incrément de l’ID si null)
         return sectionRepository.save(section);
     }
-
+*/
     // ------------------- DTO ↔ ENTITY -------------------
     private void mapDtoToEntity(SectionDTO dto, Section section, Contrat contrat) {
         section.setIdentification(dto.getIdentification());

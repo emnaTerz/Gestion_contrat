@@ -6,6 +6,7 @@ package com.emna.micro_service2.Controller;
 
 import com.emna.micro_service2.Service.*;
 import com.emna.micro_service2.dto.ExclusionRCRequest;
+import com.emna.micro_service2.dto.ExclusionsRequestDTO;
 import com.emna.micro_service2.entities.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,14 +23,15 @@ public class CatalogueController {
     private final ClausierService clausierService;
     private final ExclusionRCService exclusionRCService;
 
-    public CatalogueController(GarantieService garantieService, SousGarantieService sousGarantieService,
-                               ExclusionService exclusionService, ClausierService clausierService,
-                               ExclusionRCService exclusionRCService) {  // ajout
+    private final ExclusionsGeneraleService exclusionsService;
+
+    public CatalogueController(GarantieService garantieService, SousGarantieService sousGarantieService, ExclusionService exclusionService, ClausierService clausierService, ExclusionRCService exclusionRCService, ExclusionsGeneraleService exclusionsService) {
         this.garantieService = garantieService;
         this.sousGarantieService = sousGarantieService;
         this.exclusionService = exclusionService;
         this.clausierService = clausierService;
         this.exclusionRCService = exclusionRCService;
+        this.exclusionsService = exclusionsService;
     }
 
     // ---------------- Garanties ----------------
@@ -156,5 +158,24 @@ public class CatalogueController {
     public ResponseEntity<List<ExclusionRC>> getAllExclusionsRC() {
         return ResponseEntity.ok(exclusionRCService.getAllExclusions());
     }
-
+    @PostMapping("/exclusion-gen")
+    public ResponseEntity<ExclusionsGenerale> createExclusions(@RequestBody ExclusionsGenerale exclusions) {
+        ExclusionsGenerale created = exclusionsService.creerExclusionsGenerale(exclusions);
+        if (created != null) {
+            return ResponseEntity.ok(created);
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    @PostMapping("/exclusion-gen/{id}")
+    public ResponseEntity<ExclusionsGenerale> ajouterExclusions(
+            @PathVariable Long id,
+            @RequestBody ExclusionsRequestDTO request) {
+        try {
+            ExclusionsGenerale updated = exclusionsService.ajouterExclusions(id, request.getListeExclusion());
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
 }

@@ -26,11 +26,36 @@ public class ContratDTO {
     // -------------------- NOUVEAU --------------------
     private LocalDateTime startTime;
     private List<SectionDTO> sections;
-    private CodeAgence codeAgence;
+    private String codeAgence;
     // -------------------- RC EXPLOITATION --------------------
     private RCExploitationDTO rcExploitation;
 
     public ContratDTO() {}
+
+    public ContratDTO(String numPolice, AdherentDTO adherent, Fractionnement fractionnement, String nom_assure, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, double primeTTC, LocalDate dateDebut, LocalDate dateFin, String preambule, String editingUser, LocalDateTime editingStart, LocalDateTime startTime, List<SectionDTO> sections, String codeAgence, RCExploitationDTO rcExploitation) {
+        this.numPolice = numPolice;
+        this.adherent = adherent;
+        this.fractionnement = fractionnement;
+        Nom_assure = nom_assure;
+        this.codeRenouvellement = codeRenouvellement;
+        this.branche = branche;
+        this.typeContrat = typeContrat;
+        this.primeTTC = primeTTC;
+        this.dateDebut = dateDebut;
+        this.dateFin = dateFin;
+        this.preambule = preambule;
+        this.editingUser = editingUser;
+        this.editingStart = editingStart;
+        this.startTime = startTime;
+        this.sections = sections;
+        this.codeAgence = codeAgence;
+        this.rcExploitation = rcExploitation;
+    }
+
+    public ContratDTO(String numPolice, AdherentDTO adherentDTO, Fractionnement fractionnement, String nomAssure, CodeRenouvellement codeRenouvellement, Branche branche,
+                      TypeContrat typeContrat, double primeTTC, LocalDate dateDebut, LocalDate dateFin, String preambule, String editingUser, LocalDateTime editingStart) {
+
+    }
 
     // Getters & Setters existants
 
@@ -86,11 +111,11 @@ public class ContratDTO {
         this.startTime = startTime;
     }
 
-    public CodeAgence getCodeAgence() {
+    public String getCodeAgence() {
         return codeAgence;
     }
 
-    public void setCodeAgence(CodeAgence codeAgence) {
+    public void setCodeAgence(String codeAgence) {
         this.codeAgence = codeAgence;
     }
 

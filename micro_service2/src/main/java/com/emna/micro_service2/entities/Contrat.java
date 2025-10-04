@@ -30,8 +30,8 @@ public class Contrat {
     @Enumerated(EnumType.STRING)
     private TypeContrat typeContrat;
 
-    @Enumerated(EnumType.STRING)
-    private CodeAgence codeAgence;
+
+    private String codeAgence;
 
     private double primeTTC;
     private LocalDate dateDebut;
@@ -44,7 +44,7 @@ public class Contrat {
 
     public Contrat() {}
 
-    public Contrat(String numPolice, Adherent adherent, String nom_assure, Fractionnement fractionnement, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, CodeAgence codeAgence, double primeTTC, LocalDate dateDebut, LocalDate dateFin, String editingUser, LocalDateTime editingStart, String preambule) {
+    public Contrat(String numPolice, Adherent adherent, String nom_assure, Fractionnement fractionnement, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, String codeAgence, double primeTTC, LocalDate dateDebut, LocalDate dateFin, String editingUser, LocalDateTime editingStart, String preambule) {
         this.numPolice = numPolice;
         this.adherent = adherent;
         Nom_assure = nom_assure;
@@ -62,11 +62,13 @@ public class Contrat {
     }
 
     // Getter et Setter pour codeAgence
-    public CodeAgence getCodeAgence() {
+
+
+    public String getCodeAgence() {
         return codeAgence;
     }
 
-    public void setCodeAgence(CodeAgence codeAgence) {
+    public void setCodeAgence(String codeAgence) {
         this.codeAgence = codeAgence;
     }
 

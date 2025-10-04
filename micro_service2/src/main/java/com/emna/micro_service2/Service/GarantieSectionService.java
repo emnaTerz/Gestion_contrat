@@ -31,12 +31,8 @@ public class GarantieSectionService {
 
     // ------------------- CREATE OR UPDATE -------------------
     @Transactional
-    public GarantieSection createOrUpdateGarantie(GarantieSectionDTO dto, Section section, HttpServletRequest request) throws Exception {
-        String token = jwtService.getTokenFromRequest(request);
-        if (token == null) throw new Exception("Token manquant");
+    public GarantieSection createOrUpdateGarantie(GarantieSectionDTO dto, Section section) throws Exception {
 
-        String username = jwtService.extractUserName(token);
-        if (!jwtService.isTokenValid(token, username)) throw new Exception("Token invalide");
 
         GarantieSection garantie = new GarantieSection();
 

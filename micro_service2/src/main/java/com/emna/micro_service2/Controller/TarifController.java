@@ -60,9 +60,8 @@ public class TarifController {
     public ResponseEntity<?> getTarifByBranche(@PathVariable Branche branche) {
         try {
             Tarif tarif = tarifService.getTarifByBranche(branche);
-            return ResponseEntity.ok(tarif);
+            return ResponseEntity.ok(tarif); // Retournera l'ID
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
-    }
-}
+}}

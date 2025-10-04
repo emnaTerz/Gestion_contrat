@@ -2,7 +2,9 @@ package com.emna.micro_service2.Controller;
 
 
 import com.emna.jwt_service.Service.JwtService;
+import com.emna.micro_service2.Service.ContratPdfService;
 import com.emna.micro_service2.Service.HistoriqueContratService;
+import com.emna.micro_service2.dto.AdherentDTO;
 import com.emna.micro_service2.dto.ContratDTO;
 import com.emna.micro_service2.dto.Responses.ContratResponseDTO;
 import com.emna.micro_service2.entities.Contrat;
@@ -11,19 +13,20 @@ import com.emna.micro_service2.entities.HistoriqueContrat;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.server.ResponseStatusException;
+
 
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.HashMap;
+
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
+
 
 @RestController
 @RequestMapping("/contrat")
@@ -35,7 +38,10 @@ public class ContratController {
     private JwtService jwtService;
     @Autowired
     private HistoriqueContratService historiqueContratService;
-
+    @Autowired
+    private UserDetailsService userDetailsService;
+    @Autowired
+    private ContratPdfService contratPdfService;
 
 
 
@@ -96,7 +102,7 @@ public class ContratController {
     public boolean contratExists(@PathVariable String numPolice) {
         return contratService.existsByNumPolice(numPolice);
     }
-    @GetMapping("/historique")
+  /*  @GetMapping("/historique")
     public ResponseEntity<?> getHistorique(
             HttpServletRequest request
     ) throws Exception {
@@ -110,7 +116,31 @@ public class ContratController {
         // -------------------- HISTORIQUE --------------------
         List<HistoriqueContrat> historique = historiqueContratService.getAllHistorique();
         return ResponseEntity.ok(historique);
+    }*/
+
+    @GetMapping("/historique")
+    public ResponseEntity<?> getHistorique(HttpServletRequest request) throws Exception {
+        // -------------------- TOKEN --------------------
+        String token = jwtService.getTokenFromRequest(request);
+        if (token == null) {
+            throw new Exception("Token manquant");
+        }
+
+        String username = jwtService.extractUserName(token);
+
+        // Charger l'utilisateur depuis UserDetailsService
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+        // Valider le token avec UserDetails
+        if (!jwtService.isTokenValid(token, userDetails)) {
+            throw new Exception("Token invalide");
+        }
+
+        // -------------------- HISTORIQUE --------------------
+        List<HistoriqueContrat> historique = historiqueContratService.getAllHistorique();
+        return ResponseEntity.ok(historique);
     }
+
 
     @DeleteMapping("/historique/{id}")
     public ResponseEntity<Void> deleteHistorique(@PathVariable Long id) {
@@ -123,7 +153,10 @@ public class ContratController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    @GetMapping("/locked")
+
+
+
+   @GetMapping("/locked")
     public ResponseEntity<List<Contrat>> getLockedContrats(HttpServletRequest request) {
         try {
             // Extraire le token depuis l'en-tête Authorization
@@ -138,8 +171,11 @@ public class ContratController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
             }
 
+            // Charger UserDetails
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
             // Vérifier que le token est valide
-            if (!jwtService.isTokenValid(token, username)) {
+            if (!jwtService.isTokenValid(token, userDetails)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
             }
 
@@ -148,10 +184,59 @@ public class ContratController {
             return ResponseEntity.ok(lockedContrats);
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
 
-}
+
+  /*  @GetMapping("/{numPolice}/pdf")
+    public ResponseEntity<byte[]> downloadContratPdf(@PathVariable String numPolice, HttpServletRequest request) {
+        try {
+            // Récupérer le contrat (votre méthode existante)
+            ContratResponseDTO contrat = contratService.getContratComplet(numPolice, request);
+
+            // Générer le PDF
+            byte[] pdfBytes = contratPdfService.generateContratPdf(contrat);
+
+            // Retourner le fichier PDF
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=contrat_" + numPolice + ".pdf")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_PDF_VALUE)
+                    .body(pdfBytes);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }*/
+  @GetMapping("/{numPolice}/pdf")
+  public ResponseEntity<byte[]> downloadContratPdf(
+          @PathVariable String numPolice,
+          @RequestParam(required = false) String timestamp,
+          HttpServletRequest request) {
+
+      try {
+          ContratResponseDTO contrat = contratService.getContratComplet(numPolice, request);
+          byte[] pdfBytes = contratPdfService.generateContratPdf(contrat);
+
+          HttpHeaders headers = new HttpHeaders();
+          headers.setContentType(MediaType.APPLICATION_PDF);
+
+          // Forcer le téléchargement avec un nom unique
+          String filename = numPolice + "_" + System.currentTimeMillis() + ".pdf";
+          headers.setContentDisposition(ContentDisposition.builder("attachment")
+                  .filename(filename)
+                  .build());
+
+          // Désactiver le cache
+          headers.setCacheControl(CacheControl.noCache().getHeaderValue());
+          headers.setPragma("no-cache");
+          headers.setExpires(0);
+
+          return ResponseEntity.ok()
+                  .headers(headers)
+                  .body(pdfBytes);
+      } catch (Exception e) {
+          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      }
+  }}

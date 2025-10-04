@@ -408,26 +408,36 @@ public class ContratService {
     }
 
     // ----------------------- UNLOCK -----------------------
-   /* @Transactional
+    @Transactional
     public void unlockContrat(String numPolice, HttpServletRequest request, boolean cancelled, LocalDateTime startTime) throws Exception {
         String username = jwtService.extractUserName(jwtService.getTokenFromRequest(request));
-        System.out.println("numPolice=" + numPolice + ", cancelled=" + cancelled + ", startTime=" + startTime);
 
         Contrat contrat = contratRepository.findById(numPolice)
                 .orElseThrow(() -> new Exception("Contrat introuvable"));
 
-        if (contrat.getEditingUser() == null || !contrat.getEditingUser().equals(username)) {
-            throw new Exception("Vous ne pouvez pas déverrouiller ce contrat");
+        // Le propriétaire est celui qui a verrouillé le contrat
+        boolean isOwner = username.equals(contrat.getEditingUser());
+
+        // Autorisation spéciale pour Ismail.Jebari
+        boolean isIsmail = "Ismail.Jebari".equals(username);
+
+        // Vérification des droits
+        if (!isOwner && !isIsmail) {
+            throw new Exception("Vous ne pouvez pas déverrouiller ce contrat. Verrouillé par: " + contrat.getEditingUser());
         }
 
-        // Historique
-        long tempsRealisation = startTime != null
+        // Calcul du temps de réalisation
+        long tempsRealisation = (startTime != null)
                 ? java.time.Duration.between(startTime, LocalDateTime.now()).toMillis()
                 : 0;
 
         String action = cancelled
                 ? "Tentative modification contrat " + contrat.getNumPolice() + " (annulée)"
                 : "Fin modification contrat " + contrat.getNumPolice();
+
+        if (isIsmail && !isOwner) {
+            action += " (déverrouillé par Ismail)";
+        }
 
         historiqueContratService.enregistrerHistorique(action, username, tempsRealisation);
 
@@ -436,8 +446,8 @@ public class ContratService {
         contrat.setEditingStart(null);
         contratRepository.save(contrat);
     }
-*/
-    @Transactional
+
+  /*  @Transactional
     public void unlockContrat(String numPolice, HttpServletRequest request, boolean cancelled, LocalDateTime startTime) throws Exception {
         String username = jwtService.extractUserName(jwtService.getTokenFromRequest(request));
 
@@ -445,7 +455,7 @@ public class ContratService {
                 .orElseThrow(() -> new Exception("Contrat introuvable"));
 
         // Liste des utilisateurs ADMIN (à adapter avec vos vrais admins)
-        List<String> adminUsers = Arrays.asList("med.barhoumi", "ADMIN");
+        List<String> adminUsers = Arrays.asList("Ismail.Jebari", "ADMIN");
 
         boolean isOwner = contrat.getEditingUser() != null && contrat.getEditingUser().equals(username);
         boolean isAdmin = adminUsers.contains(username);
@@ -474,7 +484,7 @@ public class ContratService {
         contrat.setEditingUser(null);
         contrat.setEditingStart(null);
         contratRepository.save(contrat);
-    }
+    }*/
 
     private void unlockContratInternal(Contrat contrat) {
         contrat.setEditingUser(null);
@@ -491,7 +501,7 @@ public class ContratService {
     }
 
 
-   @Transactional(readOnly = true)
+   @Transactional
     public ContratResponseDTO getContratComplet(String numPolice, HttpServletRequest request) throws Exception {
         // Vérification et récupération de l'utilisateur
         String username = validateTokenAndGetUser(request);

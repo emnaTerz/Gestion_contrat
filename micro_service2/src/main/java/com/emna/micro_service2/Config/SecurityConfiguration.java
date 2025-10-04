@@ -11,6 +11,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -30,4 +33,15 @@ public class SecurityConfiguration {
                 );
 
         return http.build();
-    }}
+    }
+    @Bean
+    public InMemoryUserDetailsManager inMemoryUserDetailsManager() {
+        UserDetails ismail = User.withUsername("Ismail.Jebari")
+                .password("{noop}password") // {noop} = pas de hash
+                .roles("USER")              // rôle simple pour accès
+                .build();
+
+        // Tu peux ajouter d'autres users si nécessaire
+        return new InMemoryUserDetailsManager(ismail);
+    }
+}
