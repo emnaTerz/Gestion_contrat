@@ -14,13 +14,14 @@ public class Section {
     private String natureConstruction;
     private String contiguite;
     private String avoisinage;
-    @ManyToOne
-    @JoinColumn(name = "rc_exploitation_id")
-    private RC_Exploitation rcExploitation;
 
     @ManyToOne
     @JoinColumn(name = "num_police", referencedColumnName = "numPolice")
     private Contrat contrat;
+
+    @ManyToOne
+    @JoinColumn(name = "rc_exploitation_id")
+    private RC_Exploitation rcExploitation;
 
     public Section() {}
 

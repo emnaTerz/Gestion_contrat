@@ -25,12 +25,7 @@ public class TarifService {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
     }
- /* private void validateToken(HttpServletRequest request) throws Exception {
-        String token = jwtService.getTokenFromRequest(request);
-        if (token == null) throw new Exception("Token manquant");
-        String username = jwtService.extractUserName(token);
-        if (!jwtService.isTokenValid(token, username)) throw new Exception("Token invalide");
-    }*/
+
 
 
     private void validateToken(HttpServletRequest request) throws Exception {

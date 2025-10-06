@@ -17,6 +17,7 @@ public class ContratDTO {
     private LocalDate dateDebut;
     private LocalDate dateFin;
     private String preambule;
+    private List<RcConfigurationDTO> rcConfigurations;
 
     // Lock
 
@@ -28,11 +29,11 @@ public class ContratDTO {
     private List<SectionDTO> sections;
     private String codeAgence;
     // -------------------- RC EXPLOITATION --------------------
-    private RCExploitationDTO rcExploitation;
+
 
     public ContratDTO() {}
 
-    public ContratDTO(String numPolice, AdherentDTO adherent, Fractionnement fractionnement, String nom_assure, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, double primeTTC, LocalDate dateDebut, LocalDate dateFin, String preambule, String editingUser, LocalDateTime editingStart, LocalDateTime startTime, List<SectionDTO> sections, String codeAgence, RCExploitationDTO rcExploitation) {
+    public ContratDTO(String numPolice, AdherentDTO adherent, Fractionnement fractionnement, String nom_assure, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, double primeTTC, LocalDate dateDebut, LocalDate dateFin, String preambule, List<RcConfigurationDTO> rcConfigurations, String editingUser, LocalDateTime editingStart, LocalDateTime startTime, List<SectionDTO> sections, String codeAgence) {
         this.numPolice = numPolice;
         this.adherent = adherent;
         this.fractionnement = fractionnement;
@@ -44,12 +45,12 @@ public class ContratDTO {
         this.dateDebut = dateDebut;
         this.dateFin = dateFin;
         this.preambule = preambule;
+        this.rcConfigurations = rcConfigurations;
         this.editingUser = editingUser;
         this.editingStart = editingStart;
         this.startTime = startTime;
         this.sections = sections;
         this.codeAgence = codeAgence;
-        this.rcExploitation = rcExploitation;
     }
 
     public ContratDTO(String numPolice, AdherentDTO adherentDTO, Fractionnement fractionnement, String nomAssure, CodeRenouvellement codeRenouvellement, Branche branche,
@@ -119,11 +120,11 @@ public class ContratDTO {
         this.codeAgence = codeAgence;
     }
 
-    public RCExploitationDTO getRcExploitation() {
-        return rcExploitation;
+    public List<RcConfigurationDTO> getRcConfigurations() {
+        return rcConfigurations;
     }
 
-    public void setRcExploitation(RCExploitationDTO rcExploitation) {
-        this.rcExploitation = rcExploitation;
+    public void setRcConfigurations(List<RcConfigurationDTO> rcConfigurations) {
+        this.rcConfigurations = rcConfigurations;
     }
 }

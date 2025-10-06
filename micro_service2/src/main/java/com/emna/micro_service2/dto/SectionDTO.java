@@ -9,10 +9,10 @@ public class SectionDTO {
     private String contiguite;
     private String avoisinage;
     private String NumPolice; // Référence au Contrat
-    private boolean rcExploitationActive; // true si cette section a RC
-    private RCExploitationDTO rcExploitation; // si rcExploitationActive = true
 
 
+    private boolean rcExploitationActive;
+    private RCExploitationDTO rcExploitation;
 
 
     // ----------------- NOUVEAU -----------------
@@ -38,8 +38,15 @@ public class SectionDTO {
     // ----------------- GETTERS/SETTERS NOUVEAUX -----------------
     public List<GarantieSectionDTO> getGaranties() { return garanties; }
     public void setGaranties(List<GarantieSectionDTO> garanties) { this.garanties = garanties; }
-    public boolean isRcExploitationActive() { return rcExploitationActive; }
-    public void setRcExploitationActive(boolean rcExploitationActive) { this.rcExploitationActive = rcExploitationActive; }
+
+    public boolean isRcExploitationActive() {
+        return rcExploitationActive;
+    }
+
+    public void setRcExploitationActive(boolean rcExploitationActive) {
+        this.rcExploitationActive = rcExploitationActive;
+    }
+
     public RCExploitationDTO getRcExploitation() {
         return rcExploitation;
     }
@@ -47,5 +54,4 @@ public class SectionDTO {
     public void setRcExploitation(RCExploitationDTO rcExploitation) {
         this.rcExploitation = rcExploitation;
     }
-
 }

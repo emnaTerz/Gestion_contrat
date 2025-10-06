@@ -50,7 +50,7 @@ public class ContratController {
             return ResponseEntity.ok(contratService.creerContratComplet(dto, request));
         }
 
-        @PutMapping("/modifier")
+       @PutMapping("/modifier")
         public ResponseEntity<Contrat> modifierContrat(@RequestBody ContratDTO dto, HttpServletRequest request) throws Exception {
             return ResponseEntity.ok(contratService.modifierContrat(dto, request));
         }

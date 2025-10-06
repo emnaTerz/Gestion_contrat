@@ -112,7 +112,7 @@ public class ContratPdfService {
             addSituationRisques(document, contrat, helvetica, helveticaBold);
             addGaranties(document, contrat, helvetica, helveticaBold);
             document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-            addResponsabiliteCivileExploitation(document, contrat, helvetica, helveticaBold);
+           /* addResponsabiliteCivileExploitation(document, contrat, helvetica, helveticaBold);*/
             document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
             addExclusionsGenerales(document, contrat, helvetica, helveticaBold);
             document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
@@ -393,7 +393,7 @@ public class ContratPdfService {
         return df.format(nombre.doubleValue());
     }
 
-    private void addResponsabiliteCivileExploitation(Document document, ContratResponseDTO contrat, PdfFont helvetica, PdfFont helveticaBold) {
+   /* private void addResponsabiliteCivileExploitation(Document document, ContratResponseDTO contrat, PdfFont helvetica, PdfFont helveticaBold) {
         boolean hasRcExploitation = contrat.getSections().stream()
                 .anyMatch(s -> s.isRcExploitationActive() && s.getRcExploitation() != null);
         if (!hasRcExploitation) return;
@@ -465,7 +465,7 @@ public class ContratPdfService {
                         .setTextAlignment(TextAlignment.LEFT));
             }
         }
-    }
+    }*/
 
     private void addExclusionsGenerales(Document document, ContratResponseDTO contrat, PdfFont helvetica, PdfFont helveticaBold) {
         Branche brancheContrat = contrat.getBranche();

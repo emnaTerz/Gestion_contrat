@@ -23,10 +23,20 @@ public class ContratResponseDTO {
     private LocalDateTime editingStart;
     private List<SectionResponseDTO> sections;
     private String codeAgence;
+    private List<RcConfigurationResponseDTO> rcConfigurations;
+
 
     public ContratResponseDTO() {}
 
     // Getters & Setters
+
+    public List<RcConfigurationResponseDTO> getRcConfigurations() {
+        return rcConfigurations;
+    }
+
+    public void setRcConfigurations(List<RcConfigurationResponseDTO> rcConfigurations) {
+        this.rcConfigurations = rcConfigurations;
+    }
 
     public String getNom_assure() {
         return Nom_assure;

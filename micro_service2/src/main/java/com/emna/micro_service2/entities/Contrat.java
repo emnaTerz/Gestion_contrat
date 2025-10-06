@@ -4,6 +4,8 @@ import com.emna.micro_service2.entities.enums.*;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Contrat {
@@ -41,6 +43,10 @@ public class Contrat {
 
     @Lob
     private String preambule;
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "contrat_numPolice", referencedColumnName = "numPolice")
+    private List<RC_Exploitation> rcExploitations = new ArrayList<>();
+
 
     public Contrat() {}
 

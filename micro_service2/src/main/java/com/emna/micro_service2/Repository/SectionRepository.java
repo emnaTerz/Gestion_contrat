@@ -15,9 +15,7 @@ import java.util.Optional;
 
 @Repository
 public interface SectionRepository extends JpaRepository<Section, Long> {
-    List<Section> findByContratNumPolice(String numPolice);  // récupérer toutes les sections d’un contrat
     List<Section> findByContrat_NumPolice(String numPolice);
-    Optional<Section> findByIdentificationAndContratNumPolice(String identification, String numPolice);
-
+    List<Section> findByRcExploitation_Id(Long rcExploitationId);
 
 }
