@@ -86,6 +86,7 @@ public class ContratService {
         contrat.setDateFin(dto.getDateFin());
         contrat.setCodeAgence(dto.getCodeAgence());
         contrat.setPreambule(dto.getPreambule());
+        contrat.setService(dto.getService());
 
         // -------------------- CREATION ADHERENT --------------------
         if (dto.getAdherent() != null) {
@@ -189,10 +190,20 @@ public class ContratService {
                 rcIndex++;
             }
         }
+        LocalDateTime start = dto.getStartTime(); // reçu du front
+        long tempsRealisation = start != null
+                ? Duration.between(start, LocalDateTime.now()).toMillis()
+                : 0;
 
+        historiqueContratService.enregistrerHistorique(
+                "Création contrat complet " + contrat.getNumPolice(),
+                username,
+                tempsRealisation
+        );
         // Calcul prime
         Tarif tarif = TarifService.getTarifByBranche(contrat.getBranche());
         contrat.setPrimeTTC(calculerPrimeTTC(contrat, tarif));
+        contrat.setPrimeNET(calculerSommeTotalePrimesNettes(sectionsSauvegardees));
         contratRepository.save(contrat);
 
         return contrat;
@@ -238,6 +249,7 @@ public class ContratService {
         List<Section> sectionsExistantes = sectionRepository.findByContrat_NumPolice(contrat.getNumPolice());
         Map<String, Section> sectionsParIdentification = sectionsExistantes.stream()
                 .collect(Collectors.toMap(Section::getIdentification, s -> s));
+        List<Section> sectionsSauvegardees = new ArrayList<>();
 
         // 6️⃣ Traiter chaque section du DTO
         for (SectionDTO sDto : dto.getSections()) {
@@ -264,6 +276,7 @@ public class ContratService {
 
             // 7️⃣ Gestion des garanties classiques - basée sur la sous-garantie
             traiterGarantiesSection(section, sDto.getGaranties());
+            sectionsSauvegardees.add(section);
         }
 
         // 8️⃣ Supprimer les sections qui n'existent plus dans le DTO
@@ -283,9 +296,12 @@ public class ContratService {
 
         // 🔟 Calcul de la prime
         Tarif tarif = TarifService.getTarifByBranche(contrat.getBranche());
+        contrat.setPrimeNET(calculerSommeTotalePrimesNettes(sectionsSauvegardees));
         contrat.setPrimeTTC(calculerPrimeTTC(contrat, tarif));
+
         contratRepository.save(contrat);
 
+        unlockContrat(contrat.getNumPolice(), request, false, dto.getStartTime());
         // Déverrouillage
         unlockContratInternal(contrat);
 
@@ -499,6 +515,18 @@ public class ContratService {
             }
         }
     }
+
+    public List<Contrat> getAllContrats(HttpServletRequest request)throws Exception {
+        // -------------------- VALIDATION TOKEN --------------------
+        String token = jwtService.getTokenFromRequest(request);
+        if (token == null) throw new Exception("Token manquant");
+        String username = jwtService.extractUserName(token);
+        if (!jwtService.isTokenValid(token, username)) throw new Exception("Token invalide");
+        String action = "Consultation des contrats";
+        historiqueContratService.enregistrerHistorique(action, username, 0L);
+        return contratRepository.findAll();
+
+    }
     // ------------------- LOCK / UNLOCK -------------------
 
     @Transactional(readOnly = true)
@@ -575,13 +603,14 @@ public class ContratService {
         if (isIsmail && !isOwner) {
             action += " (déverrouillé par Ismail)";
         }
-
-        historiqueContratService.enregistrerHistorique(action, username, tempsRealisation);
+        String user = contrat.getEditingUser();
+        historiqueContratService.enregistrerHistorique(action, user, tempsRealisation);
 
         // Déverrouillage
         contrat.setEditingUser(null);
         contrat.setEditingStart(null);
         contratRepository.save(contrat);
+
     }
 
 
@@ -625,7 +654,8 @@ public class ContratService {
         contratDTO.setEditingUser(contrat.getEditingUser());
         contratDTO.setEditingStart(contrat.getEditingStart());
         contratDTO.setCodeAgence(contrat.getCodeAgence());
-
+        contratDTO.setService(contrat.getService());
+        contratDTO.setPrimeNET(contrat.getPrimeNET());
         // Adhérent
         if (contrat.getAdherent() != null) {
             Adherent a = contrat.getAdherent();
@@ -800,6 +830,8 @@ public class ContratService {
         contrat.setBranche(dto.getBranche());
         contrat.setTypeContrat(dto.getTypeContrat());
         contrat.setPrimeTTC(dto.getPrimeTTC());
+        contrat.setPrimeNET(dto.getPrimeNET());
+        contrat.setService(dto.getService());
         contrat.setDateDebut(dto.getDateDebut());
         contrat.setNom_assure(dto.getNom_assure());
         contrat.setDateFin(dto.getDateFin());
@@ -826,8 +858,10 @@ public class ContratService {
         contratDTO.setTypeContrat(contrat.getTypeContrat());
         contratDTO.setPreambule(contrat.getPreambule());
         contratDTO.setPrimeTTC(contrat.getPrimeTTC());
+        contratDTO.setPrimeNET(contrat.getPrimeNET());
         contratDTO.setNom_assure(contratDTO.getNom_assure());
         contratDTO.setDateDebut(contrat.getDateDebut());
+        contratDTO.setService(contrat.getService());
         contratDTO.setDateFin(contrat.getDateFin());
         contratDTO.setEditingUser(contrat.getEditingUser());
         contratDTO.setEditingStart(contrat.getEditingStart());
@@ -886,105 +920,25 @@ public class ContratService {
     }
 
 
-  /*  public double calculerPrimeTTC(Contrat contrat, Tarif tarif) {
-        double sommePrimesNettes = 0.0;
-
-        List<Section> sections = sectionRepository.findByContrat_NumPolice(contrat.getNumPolice());
-
-        // Calculer le RC unique une seule fois
-        boolean rcCalcule = false;
-        double primeRC = 0.0;
-
-        for (Section section : sections) {
-
-            // Garanties classiques
-            List<GarantieSection> garanties = garantieSectionRepository.findBySection_Id(section.getId());
-            for (GarantieSection gs : garanties) {
-                sommePrimesNettes += gs.getPrimeNET() != null ? gs.getPrimeNET() : 0;
-            }
-
-            // RC unique (calculer une seule fois)
-            if (!rcCalcule) {
-                RC_Exploitation rc = section.getRcExploitation();
-                if (rc != null && rc.getPrimeNET() != null) {
-                    primeRC = rc.getPrimeNET();
-                }
-                rcCalcule = true;
-            }
-        }
-
-        sommePrimesNettes += primeRC;
-
-        // Calcul de base
-        double primeTTC = (sommePrimesNettes + tarif.getFq())
-                + ((sommePrimesNettes + 2) * tarif.getTaux())
-                + tarif.getFeFg();
-
-        // Ajouter prix adhésion si nouvel adhérent
-        if (contrat.getAdherent() != null && contrat.getAdherent().isNouveau()) {
-            primeTTC += tarif.getPrixAdhesion();
-        }
-
-        // Ajustement selon le fractionnement
-        int diviseur = 1;
-        if (contrat.getFractionnement() != null) {
-            switch (contrat.getFractionnement()) {
-                case ZERO -> diviseur = 1;
-                case UN   -> diviseur = 2;
-                case DEUX -> diviseur = 3;
-            }
-        }
-
-        primeTTC = primeTTC / diviseur;
-
-        return primeTTC;
-    }
-*/
-
     public double calculerPrimeTTC(Contrat contrat, Tarif tarif) {
-        double sommePrimesNettes = 0.0;
-
         List<Section> sections = sectionRepository.findByContrat_NumPolice(contrat.getNumPolice());
 
-        // 🔥 CORRECTION: Utiliser un Set pour compter les RC distincts une seule fois
-        Set<Long> rcDejaCalcules = new HashSet<>();
-        double primeRC = 0.0;
+        // 🔹 Calcul total des primes nettes (garanties + RC)
+        double sommePrimesNettes = calculerSommeTotalePrimesNettes(sections);
 
-        for (Section section : sections) {
-            // Garanties classiques
-            List<GarantieSection> garanties = garantieSectionRepository.findBySection_Id(section.getId());
-            for (GarantieSection gs : garanties) {
-                sommePrimesNettes += gs.getPrimeNET() != null ? gs.getPrimeNET() : 0;
-            }
+        System.out.println("📊 Somme totale des primes nettes (garanties + RC): " + sommePrimesNettes);
 
-            // 🔥 CORRECTION: Additionner tous les RC distincts
-            RC_Exploitation rc = section.getRcExploitation();
-            if (rc != null && rc.getPrimeNET() != null && rc.getId() != null) {
-                // Vérifier si ce RC n'a pas déjà été compté
-                if (!rcDejaCalcules.contains(rc.getId())) {
-                    primeRC += rc.getPrimeNET();
-                    rcDejaCalcules.add(rc.getId());
-                    System.out.println("✅ RC ajouté: " + rc.getId() + " - Prime: " + rc.getPrimeNET());
-                }
-            }
-        }
-
-        System.out.println("📊 Prime RC totale: " + primeRC);
-        System.out.println("📊 Prime garanties classiques: " + sommePrimesNettes);
-
-        sommePrimesNettes += primeRC;
-
-        // Calcul de base
+        // 🔹 Calcul de la prime TTC
         double primeTTC = (sommePrimesNettes + tarif.getFq())
                 + ((sommePrimesNettes + 2) * tarif.getTaux())
                 + tarif.getFeFg();
 
-        // Ajouter prix adhésion si nouvel adhérent
+        // 🔹 Ajouter le prix d’adhésion si nouvel adhérent
         if (contrat.getAdherent() != null && contrat.getAdherent().isNouveau()) {
             primeTTC += tarif.getPrixAdhesion();
         }
 
-        // Ajustement selon le fractionnement
+        // 🔹 Ajustement selon le fractionnement
         int diviseur = 1;
         if (contrat.getFractionnement() != null) {
             switch (contrat.getFractionnement()) {
@@ -999,4 +953,29 @@ public class ContratService {
         System.out.println("💰 Prime TTC finale: " + primeTTC);
         return primeTTC;
     }
+
+    /**
+     * 🔹 Calcule la somme totale des primes nettes (garanties + RC)
+     */
+    private double calculerSommeTotalePrimesNettes(List<Section> sections) {
+        double sommePrimesNettes = 0.0;
+
+        for (Section section : sections) {
+            // Garanties classiques
+            List<GarantieSection> garanties = garantieSectionRepository.findBySection_Id(section.getId());
+            for (GarantieSection gs : garanties) {
+                sommePrimesNettes += gs.getPrimeNET() != null ? gs.getPrimeNET() : 0;
+            }
+
+            // RC (même si RC identique dans une autre section)
+            RC_Exploitation rc = section.getRcExploitation();
+            if (rc != null && rc.getPrimeNET() != null) {
+                sommePrimesNettes += rc.getPrimeNET();
+                System.out.println("✅ RC ajouté pour la section " + section.getId() + " - Prime: " + rc.getPrimeNET());
+            }
+        }
+
+        return sommePrimesNettes;
+    }
+
 }

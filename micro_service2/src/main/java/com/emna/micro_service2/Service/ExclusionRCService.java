@@ -7,6 +7,7 @@ import com.emna.micro_service2.Repository.ExclusionRCRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ExclusionRCService {
@@ -16,6 +17,7 @@ public class ExclusionRCService {
     public ExclusionRCService(ExclusionRCRepository exclusionRCRepository) {
         this.exclusionRCRepository = exclusionRCRepository;
     }
+   public Optional<ExclusionRC> getExclusions(long id) {return exclusionRCRepository.findById(id);};
 
     // Créer une nouvelle exclusion RC
     public ExclusionRC createExclusion(String nom) {

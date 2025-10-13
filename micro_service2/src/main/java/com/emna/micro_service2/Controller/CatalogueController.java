@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/contrat/catalogue")
@@ -152,6 +153,17 @@ public class CatalogueController {
         ExclusionRC exclusionRC = exclusionRCService.createExclusion(request.getNom());
         return ResponseEntity.ok(exclusionRC);
     }
+    @GetMapping("/exclusion-rc/{id}")
+    public ResponseEntity<?> getExclusionRCNoms(@PathVariable Long id) {
+        Optional<ExclusionRC> rc = exclusionRCService.getExclusions(id);
+
+        if (rc.isPresent()) {
+            String nom = rc.get().getNom(); // Supposant que getNom() existe
+            return ResponseEntity.ok(nom);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
 
     @GetMapping("/exclusion-rc")
@@ -167,6 +179,7 @@ public class CatalogueController {
             return ResponseEntity.badRequest().build();
         }
     }
+
     @PostMapping("/exclusion-gen/{id}")
     public ResponseEntity<ExclusionsGenerale> ajouterExclusions(
             @PathVariable Long id,

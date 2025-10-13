@@ -32,10 +32,11 @@ public class Contrat {
     @Enumerated(EnumType.STRING)
     private TypeContrat typeContrat;
 
-
+    private Integer service;
     private String codeAgence;
 
     private double primeTTC;
+    private double primeNET;
     private LocalDate dateDebut;
     private LocalDate dateFin;
     private String editingUser;
@@ -50,7 +51,7 @@ public class Contrat {
 
     public Contrat() {}
 
-    public Contrat(String numPolice, Adherent adherent, String nom_assure, Fractionnement fractionnement, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, String codeAgence, double primeTTC, LocalDate dateDebut, LocalDate dateFin, String editingUser, LocalDateTime editingStart, String preambule) {
+    public Contrat(String numPolice, Adherent adherent, String nom_assure, Fractionnement fractionnement, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, Integer service, String codeAgence, double primeTTC, double primeNET, LocalDate dateDebut, LocalDate dateFin, String editingUser, LocalDateTime editingStart, String preambule, List<RC_Exploitation> rcExploitations) {
         this.numPolice = numPolice;
         this.adherent = adherent;
         Nom_assure = nom_assure;
@@ -58,16 +59,19 @@ public class Contrat {
         this.codeRenouvellement = codeRenouvellement;
         this.branche = branche;
         this.typeContrat = typeContrat;
+        this.service = service;
         this.codeAgence = codeAgence;
         this.primeTTC = primeTTC;
+        this.primeNET = primeNET;
         this.dateDebut = dateDebut;
         this.dateFin = dateFin;
         this.editingUser = editingUser;
         this.editingStart = editingStart;
         this.preambule = preambule;
+        this.rcExploitations = rcExploitations;
     }
 
-    // Getter et Setter pour codeAgence
+// Getter et Setter pour codeAgence
 
 
     public String getCodeAgence() {
@@ -129,6 +133,19 @@ public class Contrat {
     public LocalDateTime getEditingStart() { return editingStart; }
     public void setEditingStart(LocalDateTime editingStart) { this.editingStart = editingStart; }
 
+    public Integer getService() {
+        return service;
+    }
 
-    
+    public void setService(Integer service) {
+        this.service = service;
+    }
+
+    public double getPrimeNET() {
+        return primeNET;
+    }
+
+    public void setPrimeNET(double primeNET) {
+        this.primeNET = primeNET;
+    }
 }

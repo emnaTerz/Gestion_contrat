@@ -17,6 +17,9 @@ public class ContratResponseDTO {
     private TypeContrat typeContrat;
     private String preambule;
     private double primeTTC;
+    private double primeNET;
+    private Integer service;
+
     private LocalDate dateDebut;
     private LocalDate dateFin;
     private String editingUser;
@@ -96,5 +99,21 @@ public class ContratResponseDTO {
 
     public void setCodeAgence(String codeAgence) {
         this.codeAgence = codeAgence;
+    }
+
+    public Integer getService() {
+        return service;
+    }
+
+    public void setService(Integer service) {
+        this.service = service;
+    }
+
+    public double getPrimeNET() {
+        return primeNET;
+    }
+
+    public void setPrimeNET(double primeNET) {
+        this.primeNET = primeNET;
     }
 }

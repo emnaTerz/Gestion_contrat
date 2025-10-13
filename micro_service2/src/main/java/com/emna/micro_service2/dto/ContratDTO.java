@@ -14,6 +14,8 @@ public class ContratDTO {
     private Branche branche;
     private TypeContrat typeContrat;
     private double primeTTC;
+    private Integer service;
+    private double primeNET;
     private LocalDate dateDebut;
     private LocalDate dateFin;
     private String preambule;
@@ -33,7 +35,7 @@ public class ContratDTO {
 
     public ContratDTO() {}
 
-    public ContratDTO(String numPolice, AdherentDTO adherent, Fractionnement fractionnement, String nom_assure, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, double primeTTC, LocalDate dateDebut, LocalDate dateFin, String preambule, List<RcConfigurationDTO> rcConfigurations, String editingUser, LocalDateTime editingStart, LocalDateTime startTime, List<SectionDTO> sections, String codeAgence) {
+    public ContratDTO(String numPolice, AdherentDTO adherent, Fractionnement fractionnement, String nom_assure, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, double primeTTC, Integer service, double primeNET, LocalDate dateDebut, LocalDate dateFin, String preambule, List<RcConfigurationDTO> rcConfigurations, String editingUser, LocalDateTime editingStart, LocalDateTime startTime, List<SectionDTO> sections, String codeAgence) {
         this.numPolice = numPolice;
         this.adherent = adherent;
         this.fractionnement = fractionnement;
@@ -42,6 +44,8 @@ public class ContratDTO {
         this.branche = branche;
         this.typeContrat = typeContrat;
         this.primeTTC = primeTTC;
+        this.service = service;
+        this.primeNET = primeNET;
         this.dateDebut = dateDebut;
         this.dateFin = dateFin;
         this.preambule = preambule;
@@ -126,5 +130,21 @@ public class ContratDTO {
 
     public void setRcConfigurations(List<RcConfigurationDTO> rcConfigurations) {
         this.rcConfigurations = rcConfigurations;
+    }
+
+    public Integer getService() {
+        return service;
+    }
+
+    public void setService(Integer service) {
+        this.service = service;
+    }
+
+    public double getPrimeNET() {
+        return primeNET;
+    }
+
+    public void setPrimeNET(double primeNET) {
+        this.primeNET = primeNET;
     }
 }

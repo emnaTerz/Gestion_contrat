@@ -55,7 +55,10 @@ public class ContratController {
             return ResponseEntity.ok(contratService.modifierContrat(dto, request));
         }
 
-
+    @GetMapping("/all")
+    public List<Contrat> getAllContrats(HttpServletRequest request) throws Exception {
+        return contratService.getAllContrats(request);
+    }
 
     @GetMapping("/{numPolice}")
     public ResponseEntity<?> getContrat(@PathVariable String numPolice, HttpServletRequest request) {
