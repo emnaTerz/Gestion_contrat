@@ -1,5 +1,6 @@
 package com.emna.micro_service2.entities;
 
+import com.emna.micro_service2.entities.enums.Branche;
 import jakarta.persistence.*;
 
 @Entity
@@ -11,6 +12,10 @@ public class SousGarantie {
 
     private String nom;
 
+    @Enumerated(EnumType.STRING)
+    private Branche branche;
+
+
     @ManyToOne
     @JoinColumn(name = "garantie_id", nullable = false, foreignKey = @ForeignKey(name = "fk_sousgarantie_garantie",
             foreignKeyDefinition = "FOREIGN KEY (garantie_id) REFERENCES garantie(id) ON DELETE CASCADE"))
@@ -18,9 +23,11 @@ public class SousGarantie {
 
     public SousGarantie() {}
 
-    public SousGarantie(String nom, Garantie garantie) {
+    public SousGarantie(String nom, Garantie garantie, Branche branche) {
         this.nom = nom;
         this.garantie = garantie;
+        this.branche = branche;
+
     }
 
     public Long getId() {
@@ -45,5 +52,13 @@ public class SousGarantie {
 
     public void setGarantie(Garantie garantie) {
         this.garantie = garantie;
+    }
+
+    public Branche getBranche() {
+        return branche;
+    }
+
+    public void setBranche(Branche branche) {
+        this.branche = branche;
     }
 }

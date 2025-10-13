@@ -20,6 +20,7 @@ public class ContratDTO {
     private LocalDate dateFin;
     private String preambule;
     private List<RcConfigurationDTO> rcConfigurations;
+    private String status;
 
     // Lock
 
@@ -35,8 +36,9 @@ public class ContratDTO {
 
     public ContratDTO() {}
 
-    public ContratDTO(String numPolice, AdherentDTO adherent, Fractionnement fractionnement, String nom_assure, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, double primeTTC, Integer service, double primeNET, LocalDate dateDebut, LocalDate dateFin, String preambule, List<RcConfigurationDTO> rcConfigurations, String editingUser, LocalDateTime editingStart, LocalDateTime startTime, List<SectionDTO> sections, String codeAgence) {
+    public ContratDTO(String numPolice,String status, AdherentDTO adherent, Fractionnement fractionnement, String nom_assure, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, double primeTTC, Integer service, double primeNET, LocalDate dateDebut, LocalDate dateFin, String preambule, List<RcConfigurationDTO> rcConfigurations, String editingUser, LocalDateTime editingStart, LocalDateTime startTime, List<SectionDTO> sections, String codeAgence) {
         this.numPolice = numPolice;
+        this.status = status;
         this.adherent = adherent;
         this.fractionnement = fractionnement;
         Nom_assure = nom_assure;
@@ -146,5 +148,13 @@ public class ContratDTO {
 
     public void setPrimeNET(double primeNET) {
         this.primeNET = primeNET;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

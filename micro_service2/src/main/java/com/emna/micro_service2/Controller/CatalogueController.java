@@ -8,6 +8,7 @@ import com.emna.micro_service2.Service.*;
 import com.emna.micro_service2.dto.ExclusionRCRequest;
 import com.emna.micro_service2.dto.ExclusionsRequestDTO;
 import com.emna.micro_service2.entities.*;
+import com.emna.micro_service2.entities.enums.Branche;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -69,6 +70,11 @@ public class CatalogueController {
     public ResponseEntity<List<SousGarantie>> getAllSousGaranties() {
         return ResponseEntity.ok(sousGarantieService.getAll());
     }
+    @GetMapping("/sous-garantie/by-and-branche/{branche}")
+    public List<SousGarantie> getByGarantieAndBranche(
+            @PathVariable("branche") Branche branche) {
+        return sousGarantieService.getByGarantieAndBranche(branche);
+    }
 
     @GetMapping("/sous-garantie/{id}")
     public ResponseEntity<SousGarantie> getSousGarantieById(@PathVariable Long id) {
@@ -88,7 +94,13 @@ public class CatalogueController {
         sousGarantieService.delete(id);
         return ResponseEntity.noContent().build();
     }
-
+    @GetMapping("/sous-garantie-branche/{garantieId}")
+    public ResponseEntity<List<SousGarantie>> getSousGaranties(
+            @PathVariable Long garantieId,
+            @RequestParam Branche branche) {
+        List<SousGarantie> sousGaranties = sousGarantieService.getSousGaranties(garantieId, branche);
+        return ResponseEntity.ok(sousGaranties);
+    }
     // ---------------- Exclusions ----------------
     @PostMapping("/exclusion")
     public ResponseEntity<Exclusion> createExclusion(@RequestBody Exclusion exclusion) {
@@ -118,6 +130,7 @@ public class CatalogueController {
         exclusionService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
     // ---------------- Clausiers ----------------
     @PostMapping("/clausier")
     public ResponseEntity<Clausier> createClausier(@RequestBody Clausier clausier) {

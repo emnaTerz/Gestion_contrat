@@ -4,7 +4,7 @@ import com.emna.micro_service2.Repository.ExclusionsGeneraleRepository;
 import com.emna.micro_service2.entities.ExclusionsGenerale;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-;import java.util.List;
+import java.util.List;
 
 @Service
 public class ExclusionsGeneraleService {

@@ -34,6 +34,7 @@ public class Contrat {
 
     private Integer service;
     private String codeAgence;
+    private String status;
 
     private double primeTTC;
     private double primeNET;
@@ -51,7 +52,7 @@ public class Contrat {
 
     public Contrat() {}
 
-    public Contrat(String numPolice, Adherent adherent, String nom_assure, Fractionnement fractionnement, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, Integer service, String codeAgence, double primeTTC, double primeNET, LocalDate dateDebut, LocalDate dateFin, String editingUser, LocalDateTime editingStart, String preambule, List<RC_Exploitation> rcExploitations) {
+    public Contrat(String numPolice, Adherent adherent, String nom_assure, Fractionnement fractionnement, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, Integer service, String codeAgence, double primeTTC, double primeNET, LocalDate dateDebut, LocalDate dateFin, String editingUser, LocalDateTime editingStart, String preambule, List<RC_Exploitation> rcExploitations, String status) {
         this.numPolice = numPolice;
         this.adherent = adherent;
         Nom_assure = nom_assure;
@@ -69,9 +70,9 @@ public class Contrat {
         this.editingStart = editingStart;
         this.preambule = preambule;
         this.rcExploitations = rcExploitations;
+        this.status = status;
     }
 
-// Getter et Setter pour codeAgence
 
 
     public String getCodeAgence() {
@@ -91,6 +92,14 @@ public class Contrat {
     }
 
     // Getters & Setters
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
     public String getPreambule() {
         return preambule;

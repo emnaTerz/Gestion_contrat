@@ -87,6 +87,7 @@ public class ContratService {
         contrat.setCodeAgence(dto.getCodeAgence());
         contrat.setPreambule(dto.getPreambule());
         contrat.setService(dto.getService());
+        contrat.setStatus("figé");
 
         // -------------------- CREATION ADHERENT --------------------
         if (dto.getAdherent() != null) {
@@ -208,7 +209,29 @@ public class ContratService {
 
         return contrat;
     }
-
+    @Transactional
+    public String getContratStatus(String numPolice) {
+        Optional<Contrat> contratOpt = contratRepository.findById(numPolice);
+        if (contratOpt.isPresent()) {
+            return contratOpt.get().getStatus();
+        } else {
+            return "Contrat non trouvé";
+        }
+    }
+    public Contrat toggleStatus(String numPolice) {
+        Optional<Contrat> opt = contratRepository.findById(numPolice);
+        if (opt.isPresent()) {
+            Contrat contrat = opt.get();
+            // Basculer le statut
+            if ("figé".equalsIgnoreCase(contrat.getStatus())) {
+                contrat.setStatus("actif");
+            } else {
+                contrat.setStatus("figé");
+            }
+            return contratRepository.save(contrat);
+        }
+        return null;
+    }
     @Transactional
     public Contrat modifierContrat(ContratDTO dto, HttpServletRequest request) throws Exception {
         String username = validateTokenAndGetUser(request);

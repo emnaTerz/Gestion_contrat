@@ -3,6 +3,7 @@ package com.emna.micro_service2.Repository;
 
 
 import com.emna.micro_service2.entities.SousGarantie;
+import com.emna.micro_service2.entities.enums.Branche;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,4 +20,7 @@ public interface SousGarantieRepository extends JpaRepository<SousGarantie, Long
     @Transactional
     @Query("DELETE FROM SousGarantie s WHERE s.garantie.id = :garantieId")
     void deleteByGarantieId(@Param("garantieId") Long garantieId);
+    List<SousGarantie> findByBranche(Branche branche);
+    List<SousGarantie> findByGarantieIdAndBranche(Long garantieId, Branche branche);
+
 }

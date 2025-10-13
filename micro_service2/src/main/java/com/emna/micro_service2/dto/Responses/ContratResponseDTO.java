@@ -19,7 +19,7 @@ public class ContratResponseDTO {
     private double primeTTC;
     private double primeNET;
     private Integer service;
-
+    private String status;
     private LocalDate dateDebut;
     private LocalDate dateFin;
     private String editingUser;
@@ -115,5 +115,13 @@ public class ContratResponseDTO {
 
     public void setPrimeNET(double primeNET) {
         this.primeNET = primeNET;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
