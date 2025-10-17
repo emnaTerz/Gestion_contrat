@@ -1,5 +1,6 @@
 package com.emna.micro_service2.entities;
 
+import com.emna.micro_service2.entities.enums.Branche;
 import jakarta.persistence.*;
 
 @Entity
@@ -15,13 +16,15 @@ public class Exclusion {
     @ManyToOne
     @JoinColumn(name = "garantie_id")
     private Garantie garantie;
-
+    @Enumerated(EnumType.STRING)
+    private Branche branche;
     public Exclusion() {}
 
-    public Exclusion(Long id, String nom, Garantie garantie) {
+    public Exclusion(Long id, String nom, Garantie garantie,Branche branche) {
         this.id = id;
         this.nom = nom;
         this.garantie = garantie;
+        this.branche = branche;
     }
 
     // Getters & Setters
@@ -37,5 +40,13 @@ public class Exclusion {
 
     public void setGarantie(Garantie garantie) {
         this.garantie = garantie;
+    }
+
+    public Branche getBranche() {
+        return branche;
+    }
+
+    public void setBranche(Branche branche) {
+        this.branche = branche;
     }
 }

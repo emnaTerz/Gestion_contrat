@@ -118,7 +118,14 @@ public class CatalogueController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-
+    // GET exclusions par branche ET garantie ID
+    @GetMapping("/exclusion/branche/{branche}/garantie/{garantieId}")
+    public ResponseEntity<List<Exclusion>> getExclusionsByBrancheAndGarantieId(
+            @PathVariable Branche branche,
+            @PathVariable Long garantieId) {
+        List<Exclusion> exclusions = exclusionService.getExclusionsByBrancheAndGarantieId(branche, garantieId);
+        return ResponseEntity.ok(exclusions);
+    }
     // **Récupérer toutes les exclusions d’une garantie**
     @GetMapping("/exclusion/garantie/{garantieId}")
     public ResponseEntity<List<Exclusion>> getExclusionsByGarantie(@PathVariable Long garantieId) {

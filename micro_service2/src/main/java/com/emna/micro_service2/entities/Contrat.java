@@ -17,7 +17,7 @@ public class Contrat {
     @ManyToOne
     @JoinColumn(name = "adherent_id")
     private Adherent adherent;
-    @Lob
+
     private String Nom_assure;
 
     @Enumerated(EnumType.STRING)

@@ -2,6 +2,7 @@ package com.emna.micro_service2.Repository;
 
 
 import com.emna.micro_service2.entities.Exclusion;
+import com.emna.micro_service2.entities.enums.Branche;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,4 +20,5 @@ public interface ExclusionRepository extends JpaRepository<Exclusion, Long> {
     @Transactional
     @Query("DELETE FROM Exclusion e WHERE e.garantie.id = :GarantieId")
     void deleteByGarantieId(@Param("GarantieId") Long GarantieId);
+    List<Exclusion> findByBrancheAndGarantieId(Branche branche, Long garantieId);
 }

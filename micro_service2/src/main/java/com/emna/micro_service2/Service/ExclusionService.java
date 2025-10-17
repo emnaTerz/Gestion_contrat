@@ -4,6 +4,7 @@ package com.emna.micro_service2.Service;
 
 import com.emna.micro_service2.entities.Exclusion;
 import com.emna.micro_service2.Repository.ExclusionRepository;
+import com.emna.micro_service2.entities.enums.Branche;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -40,6 +41,8 @@ public class ExclusionService {
     public List<Exclusion> getByGarantie(Long garantieId) {
         return exclusionRepository.findByGarantieId(garantieId);
     }
-
+    public List<Exclusion> getExclusionsByBrancheAndGarantieId(Branche branche, Long garantieId) {
+        return exclusionRepository.findByBrancheAndGarantieId(branche, garantieId);
+    }
 }
 
