@@ -10,7 +10,6 @@
         <module name="micro_service1" />
         <module name="gateway" />
         <module name="discovery" />
-        <module name="jwt-service" />
       </profile>
       <profile name="Annotation profile for micro_service2" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -21,6 +20,15 @@
         </processorPath>
         <module name="micro_service2" />
       </profile>
+      <profile name="Annotation profile for jwt-service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
+        </processorPath>
+        <module name="jwt-service" />
+      </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
@@ -28,6 +36,7 @@
       <module name="config-server" options="-parameters" />
       <module name="discovery" options="-parameters" />
       <module name="gateway" options="-parameters" />
+      <module name="jwt-service" options="" />
       <module name="micro_service1" options="-parameters" />
       <module name="micro_service2" options="-parameters" />
     </option>
