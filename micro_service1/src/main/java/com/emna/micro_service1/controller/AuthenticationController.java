@@ -119,7 +119,7 @@ public class AuthenticationController {
 
             // If the token is valid, fetch all users
             List<User> users = userService.getAllUsers();
-            userActionService.logUserAction(username, "Afficher tt les utilisateurs", "/getAllUsers", "GET");
+            userActionService.logUserAction(username, "Consulter la listes des utilisateurs", "/getAllUsers", "GET");
             return ResponseEntity.ok(users);
         } catch (ExpiredJwtException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token has expired, please log in again.");
@@ -153,7 +153,7 @@ public class AuthenticationController {
               throw new UserNotFoundException("User not found.");
           }
           String modifiedUserName = existingUser.get().getUsername();
-          userActionService.logUserAction(username, "l'utilisateur:" + username + " a modifié l'utilisateur: " + modifiedUserName, "/updateUser" + id, "UPDATE");
+          userActionService.logUserAction(username, "l'admin:" + username + " a modifié l'utilisateur: " + modifiedUserName, "/updateUser" + id, "UPDATE");
       return ResponseEntity.ok(userService.updateUser(id, updatedUser));
     } catch (ExpiredJwtException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token has expired, please log in again.");
@@ -192,7 +192,7 @@ public class AuthenticationController {
             // 3️⃣ Ajouter dans l'historique
             userActionService.logUserAction(
                     username,
-                    "L'utilisateur " + username + " a créé un nouvel utilisateur : " + request.getEmail(),
+                    "L'admin " + username + " a créé un nouvel utilisateur : " + request.getEmail(),
                     "/signup",
                     "POST"
             );
@@ -253,7 +253,7 @@ public class AuthenticationController {
            String deletedUserName = userRepository.findById(id).get().getUsername();
             // Supprimer l'utilisateur
             userService.deleteUser(id);
-            userActionService.logUserAction(username, "l'utilisateur:" + username + " a Supprimé l'utilisateur: " + deletedUserName, "/deleteuser" + id, "DELETE");
+            userActionService.logUserAction(username, "l'admin:" + username + " a Supprimé l'utilisateur: " + deletedUserName, "/deleteuser" + id, "DELETE");
 
             return ResponseEntity.noContent().build();
 

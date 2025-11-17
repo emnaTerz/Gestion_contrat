@@ -618,10 +618,11 @@ public class ContratService {
         long tempsRealisation = (startTime != null)
                 ? java.time.Duration.between(startTime, LocalDateTime.now()).toMillis()
                 : 0;
-
+        System.out.println("temps realisation"+java.time.Duration.between(startTime, LocalDateTime.now()).toMillis() );
         String action = cancelled
                 ? "Tentative modification contrat " + contrat.getNumPolice() + " (annulée)"
                 : "Fin modification contrat " + contrat.getNumPolice();
+
 
         if (isIsmail && !isOwner) {
             action += " (déverrouillé par Ismail)";
@@ -943,7 +944,7 @@ public class ContratService {
     }
 
 
-    public double calculerPrimeTTC(Contrat contrat, Tarif tarif) {
+   /* public double calculerPrimeTTC(Contrat contrat, Tarif tarif) {
         List<Section> sections = sectionRepository.findByContrat_NumPolice(contrat.getNumPolice());
 
         // 🔹 Calcul total des primes nettes (garanties + RC)
@@ -975,7 +976,42 @@ public class ContratService {
 
         System.out.println("💰 Prime TTC finale: " + primeTTC);
         return primeTTC;
-    }
+    }*/
+   public double calculerPrimeTTC(Contrat contrat, Tarif tarif) {
+       List<Section> sections = sectionRepository.findByContrat_NumPolice(contrat.getNumPolice());
+
+       // 🔹 Calcul total des primes nettes (garanties + RC)
+       double sommePrimesNettes = calculerSommeTotalePrimesNettes(sections);
+
+       System.out.println("📊 Somme totale des primes nettes (garanties + RC): " + sommePrimesNettes);
+
+       // 🔹 Prime nette + FQ
+       double base = sommePrimesNettes + tarif.getFq();
+
+       // 🔹 Calcul de la prime TTC selon la formule
+       double primeTTC = base + (base * tarif.getTaux()) + tarif.getFeFg();
+
+       // 🔹 Ajouter le prix d’adhésion si nouvel adhérent
+       if (contrat.getAdherent() != null && contrat.getAdherent().isNouveau()) {
+           primeTTC += tarif.getPrixAdhesion();
+       }
+
+       // 🔹 Ajustement selon le fractionnement
+       int diviseur = 1;
+       if (contrat.getFractionnement() != null) {
+           switch (contrat.getFractionnement()) {
+               case ZERO -> diviseur = 1;
+               case UN   -> diviseur = 2;
+               case DEUX -> diviseur = 3;
+           }
+       }
+
+       primeTTC = primeTTC / diviseur;
+
+       System.out.println("💰 Prime TTC finale: " + primeTTC);
+       return primeTTC;
+   }
+
 
     /**
      * 🔹 Calcule la somme totale des primes nettes (garanties + RC)

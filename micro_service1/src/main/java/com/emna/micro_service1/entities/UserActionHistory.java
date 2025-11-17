@@ -74,7 +74,8 @@ public class UserActionHistory {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
+ public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
     }
+
 }
