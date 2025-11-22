@@ -4,11 +4,14 @@ package com.emna.micro_service2.Controller;
 
 
 
+import com.emna.jwt_service.Service.JwtService;
+import com.emna.micro_service2.Repository.ClausierRepository;
 import com.emna.micro_service2.Service.*;
 import com.emna.micro_service2.dto.ExclusionRCRequest;
 import com.emna.micro_service2.dto.ExclusionsRequestDTO;
 import com.emna.micro_service2.entities.*;
 import com.emna.micro_service2.entities.enums.Branche;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,20 +30,50 @@ public class CatalogueController {
 
     private final ExclusionsGeneraleService exclusionsService;
 
-    public CatalogueController(GarantieService garantieService, SousGarantieService sousGarantieService, ExclusionService exclusionService, ClausierService clausierService, ExclusionRCService exclusionRCService, ExclusionsGeneraleService exclusionsService) {
+    private final JwtService jwtService;
+    private final HistoriqueContratService historiqueContratService;
+    private final ClausierRepository clausierRepository;
+    public CatalogueController(GarantieService garantieService,ClausierRepository clausierRepository,HistoriqueContratService historiqueContratService,JwtService jwtService, SousGarantieService sousGarantieService, ExclusionService exclusionService, ClausierService clausierService, ExclusionRCService exclusionRCService, ExclusionsGeneraleService exclusionsService) {
         this.garantieService = garantieService;
         this.sousGarantieService = sousGarantieService;
         this.exclusionService = exclusionService;
         this.clausierService = clausierService;
         this.exclusionRCService = exclusionRCService;
         this.exclusionsService = exclusionsService;
+        this.jwtService = jwtService;
+        this.historiqueContratService=historiqueContratService;
+        this.clausierRepository=clausierRepository;
     }
 
     // ---------------- Garanties ----------------
     @PostMapping("/garantie")
-    public ResponseEntity<Garantie> createGarantie(@RequestBody Garantie garantie) {
-        return ResponseEntity.ok(garantieService.createOrUpdate(garantie));
+    public ResponseEntity<Garantie> createGarantie(
+            @RequestBody Garantie garantie,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+
+        // 🔹 Récupération du token depuis le header
+        String token = null;
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);  // enlever "Bearer "
+        }
+
+        // 🔹 Extraction du username à partir du token JWT
+        String username = jwtService.extractUserName(token);
+
+        // 🔹 Création ou mise à jour de la garantie
+        Garantie savedGarantie = garantieService.createOrUpdate(garantie);
+
+        // 🔹 Enregistrement dans l’historique
+        historiqueContratService.enregistrerHistorique(
+                "Création garantie Nom = " + savedGarantie.getLibelle(),
+                username,
+                0L   
+        );
+
+        return ResponseEntity.ok(savedGarantie);
     }
+
 
     @GetMapping("/garantie")
     public ResponseEntity<List<Garantie>> getAllGaranties() {
@@ -55,16 +88,69 @@ public class CatalogueController {
     }
 
     @DeleteMapping("/garantie/{id}")
-    public ResponseEntity<Void> deleteGarantie(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteGarantie(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+
+        // 🔹 Récupération du token dans le header
+        String token = null;
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+        }
+
+        // 🔹 Extraction du username depuis le token
+        String username = jwtService.extractUserName(token);
+
+        // 🔹 Récupération de la garantie avant suppression
+        Garantie garantie = garantieService.getById(id).orElse(null);
+
+        // 🔹 Suppression
         garantieService.delete(id);
+
+        // 🔹 Enregistrement historique avec nom
+        historiqueContratService.enregistrerHistorique(
+                "Suppression garantie : " +
+                        (garantie != null ? garantie.getLibelle() : "Garantie inconnue") +
+                        " (ID = " + id + ")",
+                username,
+                0L
+        );
+
         return ResponseEntity.noContent().build();
     }
 
+
+
     // ---------------- Sous-Garanties ----------------
     @PostMapping("/sous-garantie")
-    public ResponseEntity<SousGarantie> createSousGarantie(@RequestBody SousGarantie sousGarantie) {
-        return ResponseEntity.ok(sousGarantieService.createOrUpdate(sousGarantie));
+    public ResponseEntity<SousGarantie> createSousGarantie(
+            @RequestBody SousGarantie sousGarantie,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+
+        // 🔹 Extraire le token du header Authorization
+        String token = null;
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7); // Retirer "Bearer "
+        }
+
+        // 🔹 Extraire le nom d'utilisateur depuis le token JWT
+        String username = jwtService.extractUserName(token);
+
+        // 🔹 Création / Mise à jour de la sous-garantie
+        SousGarantie saved = sousGarantieService.createOrUpdate(sousGarantie);
+
+        // 🔹 Historique
+        historiqueContratService.enregistrerHistorique(
+                "Création garantie nom = " + saved.getNom(),
+                username,
+                0L   // tempsRealisation
+        );
+
+        return ResponseEntity.ok(saved);
     }
+
 
     @GetMapping("/sous-garantie")
     public ResponseEntity<List<SousGarantie>> getAllSousGaranties() {
@@ -90,10 +176,37 @@ public class CatalogueController {
     }
 
     @DeleteMapping("/sous-garantie/{id}")
-    public ResponseEntity<Void> deleteSousGarantie(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteSousGarantie(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+
+        // 🔹 Récupération du token dans le header
+        String token = null;
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+        }
+
+        // 🔹 Extraction du username depuis le token
+        String username = jwtService.extractUserName(token);
+
+        // 🔹 Récupération de la sous-garantie avant suppression
+        SousGarantie sousGarantie = sousGarantieService.getById(id).orElse(null);
+
+        // 🔹 Suppression
         sousGarantieService.delete(id);
+
+        // 🔹 Enregistrement de l’historique avec le nom
+        historiqueContratService.enregistrerHistorique(
+                "Suppression sous-garantie : " +
+                        (sousGarantie != null ? sousGarantie.getNom() : "Sous-garantie inconnue"),
+                username,
+                0L
+        );
+
         return ResponseEntity.noContent().build();
     }
+
     @GetMapping("/sous-garantie-branche/{garantieId}")
     public ResponseEntity<List<SousGarantie>> getSousGaranties(
             @PathVariable Long garantieId,
@@ -103,9 +216,32 @@ public class CatalogueController {
     }
     // ---------------- Exclusions ----------------
     @PostMapping("/exclusion")
-    public ResponseEntity<Exclusion> createExclusion(@RequestBody Exclusion exclusion) {
-        return ResponseEntity.ok(exclusionService.createOrUpdate(exclusion));
+    public ResponseEntity<Exclusion> createExclusion(
+            @RequestBody Exclusion exclusion,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        // 🔹 Récupération du token dans le header
+        String token = null;
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+        }
+
+        // 🔹 Extraction du username depuis le token
+        String username = jwtService.extractUserName(token);
+
+        // 🔹 Création de l'exclusion
+        Exclusion createdExclusion = exclusionService.createOrUpdate(exclusion);
+
+        // 🔹 Enregistrement de l’historique
+        historiqueContratService.enregistrerHistorique(
+                "Création exclusion : " + createdExclusion.getNom(),
+                username,
+                0L  // tempsRealisation
+        );
+
+        return ResponseEntity.ok(createdExclusion);
     }
+
 
     @GetMapping("/exclusion")
     public ResponseEntity<List<Exclusion>> getAllExclusions() {
@@ -133,20 +269,74 @@ public class CatalogueController {
     }
 
     @DeleteMapping("/exclusion/{id}")
-    public ResponseEntity<Void> deleteExclusion(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteExclusion(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        // 🔹 Récupération du token dans le header
+        String token = null;
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+        }
+
+        // 🔹 Extraction du username depuis le token
+        String username = jwtService.extractUserName(token);
+
+        // 🔹 Récupération de l'exclusion avant suppression pour obtenir le nom
+        Exclusion exclusion = exclusionService.getById(id)
+                .orElseThrow(() -> new RuntimeException("Exclusion non trouvée avec id: " + id));
+
+        // 🔹 Suppression de l'exclusion
         exclusionService.delete(id);
+
+        // 🔹 Enregistrement de l’historique
+        historiqueContratService.enregistrerHistorique(
+                "Suppression exclusion : " + exclusion.getNom(),
+                username,
+                0L  // tempsRealisation
+        );
+
         return ResponseEntity.noContent().build();
     }
 
+
     // ---------------- Clausiers ----------------
     @PostMapping("/clausier")
-    public ResponseEntity<Clausier> createClausier(@RequestBody Clausier clausier) {
-        return ResponseEntity.ok(clausierService.createOrUpdate(clausier));
+    public ResponseEntity<Clausier> createClausier(
+            @RequestBody Clausier clausier,
+            @RequestHeader("Authorization") String authHeader) {
+
+        String username = null;
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7); // Enlever "Bearer "
+            username = jwtService.extractUserName(token); // Extraire le username via le service
+            System.out.println("Utilisateur connecté : " + username);
+        }
+
+        // Tu peux maintenant utiliser username dans le service si besoin
+        return ResponseEntity.ok(clausierService.createOrUpdate(clausier, username));
     }
 
+
     @GetMapping("/clausier")
-    public ResponseEntity<List<Clausier>> getAllClausiers() {
-        return ResponseEntity.ok(clausierService.getAll());
+    public ResponseEntity<List<Clausier>> getAllClausiers(
+            @RequestHeader("Authorization") String authorizationHeader) {
+
+        // Vérifier et extraire le token du header "Bearer <token>"
+        String token = null;
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7); // Supprime "Bearer "
+        }
+
+        // Extraire le username via ton service JWT
+        String username = jwtService.extractUserName(token);
+
+        // Ici, tu peux utiliser username si nécessaire
+        System.out.println("Utilisateur connecté : " + username);
+
+        // Retourner la liste des clausiers
+        return ResponseEntity.ok(clausierService.getAll(username));
     }
 
     @GetMapping("/clausier/{id}")
@@ -155,18 +345,37 @@ public class CatalogueController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-
-    // Récupérer tous les clausiers d’une sous-garantie
-    @GetMapping("/clausier/sous-garantie/{sousGarantieId}")
-    public ResponseEntity<List<Clausier>> getClausiersBySousGarantie(@PathVariable Long sousGarantieId) {
-        return ResponseEntity.ok(clausierService.getBySousGarantie(sousGarantieId));
-    }
-
     @DeleteMapping("/clausier/{id}")
-    public ResponseEntity<Void> deleteClausier(@PathVariable Long id) {
-        clausierService.delete(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> deleteClausier(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authorizationHeader) {
+        String token = null;
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+        }
+        String username = jwtService.extractUserName(token);
+
+        // Récupération du clausier
+        Optional<Clausier> clausierOptional = clausierRepository.findById(id);
+        if (clausierOptional.isPresent()) {
+            Clausier clausier = clausierOptional.get();
+
+            // Enregistrement dans l'historique
+            historiqueContratService.enregistrerHistorique(
+                    "A supprimer la clausier " + clausier.getNom(),
+                    username,
+                    0L
+            );
+
+            // Suppression
+            clausierService.delete(id);
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
+
+
     // ---------------- Exclusions RC ----------------
     @PostMapping("/exclusion-rc")
     public ResponseEntity<ExclusionRC> createExclusionRC(@RequestBody ExclusionRCRequest request) {

@@ -12,17 +12,23 @@ public class Clausier {
     private Long id;
 
     private String nom;
+    @Lob
+    private byte[] file;
 
-
-    @ManyToOne
-    @JoinColumn(name = "garantie_id")
-    private Garantie garantie;
 
     public Clausier() {}
 
-    public Clausier(String nom, Garantie garantie) {
+    public Clausier(String nom, byte[] file) {
         this.nom = nom;
-        this.garantie = garantie;
+        this.file = file;
+    }
+
+    public byte[] getFile() {
+        return file;
+    }
+
+    public void setFile(byte[] file) {
+        this.file = file;
     }
 
     // Getters & Setters
@@ -32,12 +38,5 @@ public class Clausier {
     public String getNom() { return nom; }
     public void setNom(String nom) { this.nom = nom; }
 
-    public Garantie getGarantie() {
-        return garantie;
-    }
-
-    public void setGarantie(Garantie garantie) {
-        this.garantie = garantie;
-    }
 }
 

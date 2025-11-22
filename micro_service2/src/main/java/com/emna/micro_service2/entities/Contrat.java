@@ -42,7 +42,8 @@ public class Contrat {
     private LocalDate dateFin;
     private String editingUser;
     private LocalDateTime editingStart;
-
+    @ElementCollection
+    private List<Long> clauseIds = new ArrayList<>();
     @Lob
     private String preambule;
     @OneToMany(cascade = CascadeType.ALL)
@@ -52,7 +53,8 @@ public class Contrat {
 
     public Contrat() {}
 
-    public Contrat(String numPolice, Adherent adherent, String nom_assure, Fractionnement fractionnement, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, Integer service, String codeAgence, double primeTTC, double primeNET, LocalDate dateDebut, LocalDate dateFin, String editingUser, LocalDateTime editingStart, String preambule, List<RC_Exploitation> rcExploitations, String status) {
+
+    public Contrat(String numPolice, Adherent adherent, String nom_assure, Fractionnement fractionnement, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, Integer service, String codeAgence, String status, double primeTTC, double primeNET, LocalDate dateDebut, LocalDate dateFin, String editingUser, LocalDateTime editingStart, List<Long> clauseIds, String preambule, List<RC_Exploitation> rcExploitations) {
         this.numPolice = numPolice;
         this.adherent = adherent;
         Nom_assure = nom_assure;
@@ -62,18 +64,17 @@ public class Contrat {
         this.typeContrat = typeContrat;
         this.service = service;
         this.codeAgence = codeAgence;
+        this.status = status;
         this.primeTTC = primeTTC;
         this.primeNET = primeNET;
         this.dateDebut = dateDebut;
         this.dateFin = dateFin;
         this.editingUser = editingUser;
         this.editingStart = editingStart;
+        this.clauseIds = clauseIds;
         this.preambule = preambule;
         this.rcExploitations = rcExploitations;
-        this.status = status;
     }
-
-
 
     public String getCodeAgence() {
         return codeAgence;
@@ -156,5 +157,13 @@ public class Contrat {
 
     public void setPrimeNET(double primeNET) {
         this.primeNET = primeNET;
+    }
+
+    public List<Long> getClauseIds() {
+        return clauseIds;
+    }
+
+    public void setClauseIds(List<Long> clauseIds) {
+        this.clauseIds = clauseIds;
     }
 }

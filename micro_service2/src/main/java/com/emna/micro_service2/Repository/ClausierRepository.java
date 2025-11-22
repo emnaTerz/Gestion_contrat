@@ -14,11 +14,5 @@ import java.util.List;
 @Repository
 public interface ClausierRepository extends JpaRepository<Clausier, Long> {
 
-    // récupérer toutes les clauses d’une sous-garantie
-    List<Clausier> findByGarantieId(Long garantieId);
 
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM Clausier c WHERE c.garantie.id = :garantieId")
-    void deleteByGarantieId(@Param("garantieId") Long garantieId);
 }

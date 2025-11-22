@@ -13,18 +13,35 @@ import java.util.Optional;
 public class ClausierService {
 
     private final ClausierRepository clausierRepository;
+    private final HistoriqueContratService historiqueContratService;
 
-    public ClausierService(ClausierRepository clausierRepository) {
+    public ClausierService(ClausierRepository clausierRepository, HistoriqueContratService historiqueContratService) {
         this.clausierRepository = clausierRepository;
+        this.historiqueContratService = historiqueContratService;
     }
 
     // Créer ou mettre à jour
-    public Clausier createOrUpdate(Clausier clausier) {
+    public Clausier createOrUpdate(Clausier clausier,String username) {
+
+        historiqueContratService.enregistrerHistorique(
+                "Création d' un nouveau clausier " + clausier.getNom(),
+                username,
+                0L
+        );
+
         return clausierRepository.save(clausier);
     }
 
     // Obtenir toutes les clausiers
-    public List<Clausier> getAll() {
+    public List<Clausier> getAll(String username) {
+
+        historiqueContratService.enregistrerHistorique(
+                "A consulter les clausiers " ,
+                username,
+                0L
+        );
+
+
         return clausierRepository.findAll();
     }
 
@@ -34,13 +51,12 @@ public class ClausierService {
     }
 
     // Obtenir par sous-garantie
-    public List<Clausier> getBySousGarantie(Long sousGarantieId) {
-        return clausierRepository.findByGarantieId(sousGarantieId);
-    }
+
 
 
     // Supprimer
     public void delete(Long id) {
+
         clausierRepository.deleteById(id);
     }
 }

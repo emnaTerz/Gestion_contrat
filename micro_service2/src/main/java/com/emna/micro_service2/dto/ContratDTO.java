@@ -3,6 +3,7 @@ package com.emna.micro_service2.dto;
 import com.emna.micro_service2.entities.enums.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ContratDTO {
@@ -21,8 +22,9 @@ public class ContratDTO {
     private String preambule;
     private List<RcConfigurationDTO> rcConfigurations;
     private String status;
-
+    private List<ExtensionDTO> extensions;
     // Lock
+    private List<Long> clauseIds = new ArrayList<>();
 
     private String editingUser;
     private LocalDateTime editingStart;
@@ -36,9 +38,8 @@ public class ContratDTO {
 
     public ContratDTO() {}
 
-    public ContratDTO(String numPolice,String status, AdherentDTO adherent, Fractionnement fractionnement, String nom_assure, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, double primeTTC, Integer service, double primeNET, LocalDate dateDebut, LocalDate dateFin, String preambule, List<RcConfigurationDTO> rcConfigurations, String editingUser, LocalDateTime editingStart, LocalDateTime startTime, List<SectionDTO> sections, String codeAgence) {
+    public ContratDTO(String numPolice, AdherentDTO adherent, Fractionnement fractionnement, String nom_assure, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, double primeTTC, Integer service, double primeNET, LocalDate dateDebut, LocalDate dateFin, String preambule, List<RcConfigurationDTO> rcConfigurations, String status, List<ExtensionDTO> extensions, List<Long> clauseIds, String editingUser, LocalDateTime editingStart, LocalDateTime startTime, List<SectionDTO> sections, String codeAgence) {
         this.numPolice = numPolice;
-        this.status = status;
         this.adherent = adherent;
         this.fractionnement = fractionnement;
         Nom_assure = nom_assure;
@@ -52,6 +53,9 @@ public class ContratDTO {
         this.dateFin = dateFin;
         this.preambule = preambule;
         this.rcConfigurations = rcConfigurations;
+        this.status = status;
+        this.extensions = extensions;
+        this.clauseIds = clauseIds;
         this.editingUser = editingUser;
         this.editingStart = editingStart;
         this.startTime = startTime;
@@ -156,5 +160,21 @@ public class ContratDTO {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public List<ExtensionDTO> getExtensions() {
+        return extensions;
+    }
+
+    public void setExtensions(List<ExtensionDTO> extensions) {
+        this.extensions = extensions;
+    }
+
+    public List<Long> getClauseIds() {
+        return clauseIds;
+    }
+
+    public void setClauseIds(List<Long> clauseIds) {
+        this.clauseIds = clauseIds;
     }
 }

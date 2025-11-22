@@ -52,6 +52,8 @@ public class ContratService {
     private SousGarantieRepository sousGarantieRepository;
     @Autowired
     private ExclusionRepository exclusionRepository;
+    @Autowired
+    private ExtensionRepository extensionRepository;
 
 
     @Autowired
@@ -191,6 +193,21 @@ public class ContratService {
                 rcIndex++;
             }
         }
+        if (dto.getExtensions() != null && !dto.getExtensions().isEmpty()) {
+
+            List<Extension> extensions = dto.getExtensions().stream()
+                    .map(extDTO -> new Extension(
+                            contrat.getNumPolice(),
+                            extDTO.getTitre(),
+                            extDTO.getTexte()
+                    ))
+                    .collect(Collectors.toList());
+
+            extensionRepository.saveAll(extensions);
+        }
+        if (dto.getClauseIds() != null) {
+            contrat.setClauseIds(dto.getClauseIds());
+        }
         LocalDateTime start = dto.getStartTime(); // reçu du front
         long tempsRealisation = start != null
                 ? Duration.between(start, LocalDateTime.now()).toMillis()
@@ -316,7 +333,43 @@ public class ContratService {
             // Si pas de RC configurations, supprimer tous les RC existants
             supprimerTousLesRC(contrat);
         }
+        // -------------------- GESTION DES EXTENSIONS --------------------
+        if (dto.getExtensions() != null && !dto.getExtensions().isEmpty()) {
+            // Récupérer les extensions existantes du contrat
+            List<Extension> extensionsExistantes = extensionRepository.findByNumPolice(contrat.getNumPolice());
+            Map<Long, Extension> extensionsParId = extensionsExistantes.stream()
+                    .filter(ext -> ext.getId() != null)
+                    .collect(Collectors.toMap(Extension::getId, ext -> ext));
 
+            for (ExtensionDTO extDTO : dto.getExtensions()) {
+                Extension ext;
+                if (extDTO.getId() != null && extensionsParId.containsKey(extDTO.getId())) {
+                    // Mettre à jour l'extension existante
+                    ext = extensionsParId.get(extDTO.getId());
+                    ext.setTexte(extDTO.getTexte());
+                    ext.setTitre(extDTO.getTitre());
+                    extensionsParId.remove(extDTO.getId());
+                } else {
+                    // Créer une nouvelle extension
+                    ext = new Extension();
+                    ext.setNumPolice(contrat.getNumPolice());
+                    ext.setTexte(extDTO.getTexte());
+                    ext.setTitre(extDTO.getTitre());
+                }
+                extensionRepository.save(ext);
+            }
+
+            // Supprimer les extensions qui ne sont plus présentes dans le DTO
+            for (Extension extASupprimer : extensionsParId.values()) {
+                extensionRepository.delete(extASupprimer);
+            }
+        }
+
+        if (dto.getClauseIds() != null) {
+            contrat.setClauseIds(dto.getClauseIds());
+        } else {
+            contrat.setClauseIds(new ArrayList<>());
+        }
         // 🔟 Calcul de la prime
         Tarif tarif = TarifService.getTarifByBranche(contrat.getBranche());
         contrat.setPrimeNET(calculerSommeTotalePrimesNettes(sectionsSauvegardees));
@@ -402,7 +455,6 @@ public class ContratService {
         }
     }
 
-    // NOUVELLE méthode pour supprimer tous les RC d'un contrat
     private void supprimerTousLesRC(Contrat contrat) {
         List<Section> sectionsContrat = sectionRepository.findByContrat_NumPolice(contrat.getNumPolice());
 
@@ -800,7 +852,19 @@ public class ContratService {
         }
 
         contratDTO.setRcConfigurations(rcConfigDTOs);
-
+        // -------------------- NOUVEAU: Extensions --------------------
+        List<Extension> extensions = extensionRepository.findByNumPolice(numPolice);
+        List<ExtensionResponseDTO> extensionDTOs = new ArrayList<>();
+        for (Extension ext : extensions) {
+            ExtensionResponseDTO extDTO = new ExtensionResponseDTO();
+            extDTO.setId(ext.getId());
+            extDTO.setTitre(ext.getTitre());
+            extDTO.setTexte(ext.getTexte());
+            extDTO.setNumPolice(ext.getNumPolice());
+            extensionDTOs.add(extDTO);
+        }
+        contratDTO.setExtensions(extensionDTOs);
+        contratDTO.setClauseIds(contrat.getClauseIds());
         return contratDTO;
     }
 
@@ -943,40 +1007,6 @@ public class ContratService {
         return contratDTO;
     }
 
-
-   /* public double calculerPrimeTTC(Contrat contrat, Tarif tarif) {
-        List<Section> sections = sectionRepository.findByContrat_NumPolice(contrat.getNumPolice());
-
-        // 🔹 Calcul total des primes nettes (garanties + RC)
-        double sommePrimesNettes = calculerSommeTotalePrimesNettes(sections);
-
-        System.out.println("📊 Somme totale des primes nettes (garanties + RC): " + sommePrimesNettes);
-
-        // 🔹 Calcul de la prime TTC
-        double primeTTC = (sommePrimesNettes + tarif.getFq())
-                + ((sommePrimesNettes + 2) * tarif.getTaux())
-                + tarif.getFeFg();
-
-        // 🔹 Ajouter le prix d’adhésion si nouvel adhérent
-        if (contrat.getAdherent() != null && contrat.getAdherent().isNouveau()) {
-            primeTTC += tarif.getPrixAdhesion();
-        }
-
-        // 🔹 Ajustement selon le fractionnement
-        int diviseur = 1;
-        if (contrat.getFractionnement() != null) {
-            switch (contrat.getFractionnement()) {
-                case ZERO -> diviseur = 1;
-                case UN   -> diviseur = 2;
-                case DEUX -> diviseur = 3;
-            }
-        }
-
-        primeTTC = primeTTC / diviseur;
-
-        System.out.println("💰 Prime TTC finale: " + primeTTC);
-        return primeTTC;
-    }*/
    public double calculerPrimeTTC(Contrat contrat, Tarif tarif) {
        List<Section> sections = sectionRepository.findByContrat_NumPolice(contrat.getNumPolice());
 

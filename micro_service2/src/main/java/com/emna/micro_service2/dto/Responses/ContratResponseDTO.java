@@ -4,7 +4,10 @@ package com.emna.micro_service2.dto.Responses;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+
+import com.emna.micro_service2.dto.ExtensionDTO;
 import com.emna.micro_service2.entities.enums.*;
 
 public class ContratResponseDTO {
@@ -27,6 +30,8 @@ public class ContratResponseDTO {
     private List<SectionResponseDTO> sections;
     private String codeAgence;
     private List<RcConfigurationResponseDTO> rcConfigurations;
+    private List<ExtensionResponseDTO> extensions;
+    private List<Long> clauseIds = new ArrayList<>();
 
 
     public ContratResponseDTO() {}
@@ -123,5 +128,21 @@ public class ContratResponseDTO {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public List<ExtensionResponseDTO> getExtensions() {
+        return extensions;
+    }
+
+    public void setExtensions(List<ExtensionResponseDTO> extensions) {
+        this.extensions = extensions;
+    }
+
+    public List<Long> getClauseIds() {
+        return clauseIds;
+    }
+
+    public void setClauseIds(List<Long> clauseIds) {
+        this.clauseIds = clauseIds;
     }
 }

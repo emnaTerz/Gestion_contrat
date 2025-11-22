@@ -18,13 +18,13 @@ public class GarantieService {
     @Autowired
     private SousGarantieRepository sousGarantieRepository;
     private final GarantieRepository garantieRepository;
-    private final ClausierRepository clausierRepository;
+
 
     private final ExclusionRepository exclusionRepository;
 
-    public GarantieService( GarantieRepository garantieRepository, ClausierRepository clausierRepository, ExclusionRepository exclusionRepository) {
+    public GarantieService( GarantieRepository garantieRepository , ExclusionRepository exclusionRepository) {
         this.garantieRepository = garantieRepository;
-        this.clausierRepository = clausierRepository;
+
         this.exclusionRepository = exclusionRepository;
     }
 
@@ -45,7 +45,6 @@ public class GarantieService {
 
     // Supprimer par ID
     public void delete(Long id) {
-        clausierRepository.deleteByGarantieId(id);;
         exclusionRepository.deleteByGarantieId(id);
         sousGarantieRepository.deleteByGarantieId(id);
         garantieRepository.deleteById(id);
