@@ -49,12 +49,17 @@ public class Contrat {
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "contrat_numPolice", referencedColumnName = "numPolice")
     private List<RC_Exploitation> rcExploitations = new ArrayList<>();
+    private String nature;
+
+    private LocalDateTime creationDate;
+
+    private LocalDate dateOffre;
 
 
     public Contrat() {}
 
 
-    public Contrat(String numPolice, Adherent adherent, String nom_assure, Fractionnement fractionnement, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, Integer service, String codeAgence, String status, double primeTTC, double primeNET, LocalDate dateDebut, LocalDate dateFin, String editingUser, LocalDateTime editingStart, List<Long> clauseIds, String preambule, List<RC_Exploitation> rcExploitations) {
+    public Contrat(String numPolice, Adherent adherent, String nom_assure, Fractionnement fractionnement, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, Integer service, String codeAgence, String status, double primeTTC, double primeNET, LocalDate dateDebut, LocalDate dateFin, String editingUser, LocalDateTime editingStart, List<Long> clauseIds, String preambule, List<RC_Exploitation> rcExploitations, String nature, LocalDateTime creationDate, LocalDate dateOffre) {
         this.numPolice = numPolice;
         this.adherent = adherent;
         Nom_assure = nom_assure;
@@ -74,6 +79,9 @@ public class Contrat {
         this.clauseIds = clauseIds;
         this.preambule = preambule;
         this.rcExploitations = rcExploitations;
+        this.nature = nature;
+        this.creationDate = creationDate;
+        this.dateOffre = dateOffre;
     }
 
     public String getCodeAgence() {
@@ -165,5 +173,30 @@ public class Contrat {
 
     public void setClauseIds(List<Long> clauseIds) {
         this.clauseIds = clauseIds;
+    }
+
+    public String getNature() {
+        return nature;
+    }
+
+    public void setNature(String nature) {
+        this.nature = nature;
+    }
+
+    public LocalDateTime getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate() {
+        this.creationDate = LocalDateTime.now();
+    }
+
+
+    public LocalDate getDateOffre() {
+        return dateOffre;
+    }
+
+    public void setDateOffre(LocalDate dateOffre) {
+        this.dateOffre = dateOffre;
     }
 }

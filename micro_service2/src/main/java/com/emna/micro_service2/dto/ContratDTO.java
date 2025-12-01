@@ -33,12 +33,16 @@ public class ContratDTO {
     private LocalDateTime startTime;
     private List<SectionDTO> sections;
     private String codeAgence;
-    // -------------------- RC EXPLOITATION --------------------
+    private String nature;
+
+    private LocalDateTime creationDate;
+
+    private LocalDate dateOffre;
 
 
     public ContratDTO() {}
 
-    public ContratDTO(String numPolice, AdherentDTO adherent, Fractionnement fractionnement, String nom_assure, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, double primeTTC, Integer service, double primeNET, LocalDate dateDebut, LocalDate dateFin, String preambule, List<RcConfigurationDTO> rcConfigurations, String status, List<ExtensionDTO> extensions, List<Long> clauseIds, String editingUser, LocalDateTime editingStart, LocalDateTime startTime, List<SectionDTO> sections, String codeAgence) {
+    public ContratDTO(String numPolice, AdherentDTO adherent, Fractionnement fractionnement, String nom_assure, CodeRenouvellement codeRenouvellement, Branche branche, TypeContrat typeContrat, double primeTTC, Integer service, double primeNET, LocalDate dateDebut, LocalDate dateFin, String preambule, List<RcConfigurationDTO> rcConfigurations, String status, List<ExtensionDTO> extensions, List<Long> clauseIds, String editingUser, LocalDateTime editingStart, LocalDateTime startTime, List<SectionDTO> sections, String codeAgence, String nature, LocalDateTime creationDate, LocalDate dateOffre) {
         this.numPolice = numPolice;
         this.adherent = adherent;
         this.fractionnement = fractionnement;
@@ -61,6 +65,9 @@ public class ContratDTO {
         this.startTime = startTime;
         this.sections = sections;
         this.codeAgence = codeAgence;
+        this.nature = nature;
+        this.creationDate = creationDate;
+        this.dateOffre = dateOffre;
     }
 
     public ContratDTO(String numPolice, AdherentDTO adherentDTO, Fractionnement fractionnement, String nomAssure, CodeRenouvellement codeRenouvellement, Branche branche,
@@ -176,5 +183,29 @@ public class ContratDTO {
 
     public void setClauseIds(List<Long> clauseIds) {
         this.clauseIds = clauseIds;
+    }
+
+    public String getNature() {
+        return nature;
+    }
+
+    public void setNature(String nature) {
+        this.nature = nature;
+    }
+
+    public LocalDateTime getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(LocalDateTime creationDate) {
+        this.creationDate = creationDate;
+    }
+
+    public LocalDate getDateOffre() {
+        return dateOffre;
+    }
+
+    public void setDateOffre(LocalDate dateOffre) {
+        this.dateOffre = dateOffre;
     }
 }

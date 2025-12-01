@@ -32,6 +32,11 @@ public class ContratResponseDTO {
     private List<RcConfigurationResponseDTO> rcConfigurations;
     private List<ExtensionResponseDTO> extensions;
     private List<Long> clauseIds = new ArrayList<>();
+    private String nature;
+
+    private LocalDateTime creationDate;
+
+    private LocalDate dateOffre;
 
 
     public ContratResponseDTO() {}
@@ -144,5 +149,29 @@ public class ContratResponseDTO {
 
     public void setClauseIds(List<Long> clauseIds) {
         this.clauseIds = clauseIds;
+    }
+
+    public String getNature() {
+        return nature;
+    }
+
+    public void setNature(String nature) {
+        this.nature = nature;
+    }
+
+    public LocalDateTime getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(LocalDateTime creationDate) {
+        this.creationDate = creationDate;
+    }
+
+    public LocalDate getDateOffre() {
+        return dateOffre;
+    }
+
+    public void setDateOffre(LocalDate dateOffre) {
+        this.dateOffre = dateOffre;
     }
 }

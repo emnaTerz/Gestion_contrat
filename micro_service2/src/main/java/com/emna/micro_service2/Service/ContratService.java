@@ -90,6 +90,9 @@ public class ContratService {
         contrat.setPreambule(dto.getPreambule());
         contrat.setService(dto.getService());
         contrat.setStatus("figé");
+        contrat.setNature(dto.getNature());
+        contrat.setCreationDate();
+        contrat.setDateOffre(dto.getDateOffre());
 
         // -------------------- CREATION ADHERENT --------------------
         if (dto.getAdherent() != null) {
@@ -251,6 +254,11 @@ public class ContratService {
     }
     @Transactional
     public Contrat modifierContrat(ContratDTO dto, HttpServletRequest request) throws Exception {
+
+        System.out.println("===== ContratDTO reçu =====");
+        System.out.println("NumPolice: " + dto.getNumPolice());
+        System.out.println("NATURE: " + dto.getNature());
+        System.out.println("DATE: " + dto.getDateOffre());
         String username = validateTokenAndGetUser(request);
 
         // 1️⃣ Récupérer le contrat existant
@@ -732,6 +740,8 @@ public class ContratService {
         contratDTO.setCodeAgence(contrat.getCodeAgence());
         contratDTO.setService(contrat.getService());
         contratDTO.setPrimeNET(contrat.getPrimeNET());
+        contratDTO.setDateOffre(contrat.getDateOffre());
+        contratDTO.setNature(contrat.getNature());
         // Adhérent
         if (contrat.getAdherent() != null) {
             Adherent a = contrat.getAdherent();
@@ -926,6 +936,8 @@ public class ContratService {
         contrat.setAdherent(dto.getAdherent() != null ? mapAdherentDtoToEntity(dto.getAdherent()) : null);
         contrat.setCodeAgence(dto.getCodeAgence()); // <-- ajouté
         contrat.setPreambule(dto.getPreambule());
+        contrat.setNature(dto.getNature());
+        contrat.setDateOffre(dto.getDateOffre());
     }
 
     private Adherent mapAdherentDtoToEntity(com.emna.micro_service2.dto.AdherentDTO dto) {
@@ -953,6 +965,8 @@ public class ContratService {
         contratDTO.setDateFin(contrat.getDateFin());
         contratDTO.setEditingUser(contrat.getEditingUser());
         contratDTO.setEditingStart(contrat.getEditingStart());
+        contratDTO.setNature(contrat.getNature());
+        contratDTO.setDateOffre(contrat.getDateOffre());
 
         if (contrat.getAdherent() != null) {
             Adherent a = contrat.getAdherent();

@@ -68,7 +68,7 @@ public class CatalogueController {
         historiqueContratService.enregistrerHistorique(
                 "Création garantie Nom = " + savedGarantie.getLibelle(),
                 username,
-                0L   
+                0L
         );
 
         return ResponseEntity.ok(savedGarantie);
