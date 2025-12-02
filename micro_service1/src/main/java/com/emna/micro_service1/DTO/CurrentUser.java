@@ -1,6 +1,9 @@
 package com.emna.micro_service1.DTO;
 
+import com.emna.micro_service1.entities.Branche;
 import com.emna.micro_service1.entities.Role;
+
+import java.util.List;
 
 public class CurrentUser {
 
@@ -9,17 +12,31 @@ public class CurrentUser {
     private String firstName;
     private String lastName;
     private Role role;
+    private List<Branche> branches;
+
 
     // Constructeur complet
-    public CurrentUser (Integer id, String firstName, String lastName, String email, Role role) {
+
+
+    public CurrentUser(Integer id, String email, String firstName, String lastName, Role role, List<Branche> branches) {
         this.id = id;
+        this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.email = email;
         this.role = role;
+        this.branches = branches;
     }
 
     // Getters et Setters
+
+    public List<Branche> getBranches() {
+        return branches;
+    }
+
+    public void setBranches(List<Branche> branches) {
+        this.branches = branches;
+    }
+
     public Integer getId() {
         return id;
     }

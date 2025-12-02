@@ -4,7 +4,7 @@ import com.emna.jwt_service.Service.ServiceImpl.JwtServiceImpl;
 import com.emna.micro_service1.DTO.CurrentUser;
 import com.emna.micro_service1.DTO.ResetPasswordDTO;
 import com.emna.micro_service1.DTO.UserDTO;
-
+import com.emna.micro_service1.entities.Branche;
 import com.emna.micro_service1.dao.request.SignUpRequest;
 import com.emna.micro_service1.dao.request.SigninRequest;
 import com.emna.micro_service1.dao.response.JwtAuthenticationResponse;
@@ -31,6 +31,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -322,8 +324,8 @@ public class AuthenticationController {
                         u.getEmail(),
                         u.getFirstName(),
                         u.getLastName(),
-                        u.getRole()
-
+                        u.getRole(),
+                        u.getBranches()   // 🔥 Ajout ici
                 )))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -407,8 +409,10 @@ public class AuthenticationController {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail(),
-                user.getRole()
+                user.getRole(),
+                user.getBranches()
         );
+        System.out.println("Branches du user : " + dto.getBranches());
 
         return ResponseEntity.ok(dto);
     }

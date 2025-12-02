@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -29,6 +30,9 @@ public class User implements UserDetails {
     private String password;
     @Enumerated(EnumType.STRING)
     private Role role;
+    @Convert(converter = BrancheListConverter.class)
+    @Column(name = "branches")
+    private List<Branche> branches;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -41,6 +45,13 @@ public class User implements UserDetails {
         return email;
     }
 
+    public List<Branche> getBranches() {
+        return branches;
+    }
+
+    public void setBranches(List<Branche> branches) {
+        this.branches = branches;
+    }
 
     @Override
     public boolean isAccountNonExpired() {

@@ -10,7 +10,7 @@ import java.util.Collection;
 public class UserDetailsImpl implements UserDetails {
 
     private String username;
-    private String password;  // You may store the password if needed for further use
+    private String password;
     private Collection<? extends GrantedAuthority> authorities;  // Authorities can be added later if needed
 
     // Constructor
