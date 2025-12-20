@@ -406,9 +406,9 @@ public class AuthenticationController {
 
         CurrentUser dto = new CurrentUser(
                 user.getId(),
+                user.getEmail(),
                 user.getFirstName(),
                 user.getLastName(),
-                user.getEmail(),
                 user.getRole(),
                 user.getBranches()
         );

@@ -4,6 +4,7 @@ package com.emna.micro_service2.Controller;
 import com.emna.jwt_service.Service.JwtService;
 import com.emna.micro_service2.Service.HistoriqueContratService;
 import com.emna.micro_service2.dto.ContratDTO;
+import com.emna.micro_service2.dto.HistoriqueContratDTO;
 import com.emna.micro_service2.dto.Responses.ContratResponseDTO;
 import com.emna.micro_service2.entities.Contrat;
 import com.emna.micro_service2.Service.ContratService;
@@ -19,8 +20,10 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
+import java.time.ZoneId;
 import java.util.List;
 
 
@@ -137,38 +140,32 @@ public class ContratController {
     }
 
 
+    @PostMapping("/enregistrer")
+    public ResponseEntity<Void> enregistrerHistorique(
+            @RequestBody HistoriqueContratDTO dto,
+            HttpServletRequest request
+    ) {
 
-   @GetMapping("/locked")
-    public ResponseEntity<List<Contrat>> getLockedContrats(HttpServletRequest request) {
-        try {
-            // Extraire le token depuis l'en-tête Authorization
-            String token = jwtService.getTokenFromRequest(request);
-            if (token == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-            }
+        // 1️⃣ Extraire le username depuis le token
+        String token = jwtService.getTokenFromRequest(request);
+        String username = jwtService.extractUserName(token);
 
-            // Extraire le username à partir du token
-            String username = jwtService.extractUserName(token);
-            if (username == null || username.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-            }
+        // 2️⃣ Calculer le temps de réalisation
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Africa/Tunis"));
+        long tempsRealisation = Duration
+                .between(dto.getStartDate(), now)
+                .toMillis();
 
-            // Charger UserDetails
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        // 3️⃣ Appeler le service EXISTANT (inchangé)
+        historiqueContratService.enregistrerHistorique(
+                dto.getAction(),
+                username,
+                tempsRealisation
+        );
 
-            // Vérifier que le token est valide
-            if (!jwtService.isTokenValid(token, userDetails)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-            }
-
-            // Récupérer tous les contrats verrouillés
-            List<Contrat> lockedContrats = contratService.getLockedContrats();
-            return ResponseEntity.ok(lockedContrats);
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
+        return ResponseEntity.ok().build();
     }
+
     @GetMapping("/{numPolice}/status")
     public String getContratStatus(@PathVariable String numPolice) {
         return contratService.getContratStatus(numPolice);
@@ -182,4 +179,76 @@ public class ContratController {
             return ResponseEntity.notFound().build();
         }
     }
- }
+
+
+    @GetMapping("/locked")
+    public ResponseEntity<List<Contrat>> getLockedContrats(HttpServletRequest request) {
+        try {
+            // 1️⃣ Extraire le token depuis l'en-tête Authorization
+            String token = jwtService.getTokenFromRequest(request);
+            if (token == null) {
+                System.out.println("Token manquant dans la requête");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+
+            // 2️⃣ Extraire le username depuis le token
+            String username = null;
+            try {
+                username = jwtService.extractUserName(token);
+                System.out.println("USERNAME TOKEN = " + username);
+            } catch (Exception ex) {
+                System.err.println("Erreur lors de l'extraction du username depuis le token :");
+                ex.printStackTrace();
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(null);
+            }
+
+            if (username == null || username.isEmpty()) {
+                System.out.println("Username vide après extraction du token");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+
+            // 3️⃣ Charger UserDetails
+            UserDetails userDetails = null;
+            try {
+                userDetails = userDetailsService.loadUserByUsername(username);
+                System.out.println("USER DETAILS = " + userDetails.getUsername());
+            } catch (Exception ex) {
+                System.err.println("Erreur lors du chargement de UserDetails pour : " + username);
+                ex.printStackTrace();
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+
+            // 4️⃣ Vérifier que le token est valide
+            try {
+                if (!jwtService.isTokenValid(token, userDetails)) {
+                    System.out.println("Token invalide pour user : " + username);
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+                }
+            } catch (Exception ex) {
+                System.err.println("Erreur lors de la validation du token pour : " + username);
+                ex.printStackTrace();
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+
+            // 5️⃣ Récupérer tous les contrats verrouillés
+            List<Contrat> lockedContrats = null;
+            try {
+                lockedContrats = contratService.getLockedContrats();
+                System.out.println("Nombre de contrats verrouillés récupérés : " + lockedContrats.size());
+            } catch (Exception ex) {
+                System.err.println("Erreur lors de la récupération des contrats verrouillés :");
+                ex.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            }
+
+            // 6️⃣ Retourner la liste
+            return ResponseEntity.ok(lockedContrats);
+
+        } catch (Exception e) {
+            System.err.println("ERREUR INATTENDUE DANS /locked :");
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }}
+

@@ -14,7 +14,7 @@ public class Contrat {
     @Column(name = "numPolice", unique = true, nullable = false)
     private String numPolice;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "adherent_id")
     private Adherent adherent;
 

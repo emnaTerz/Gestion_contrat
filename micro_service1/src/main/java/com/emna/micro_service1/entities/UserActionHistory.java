@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Table(name = "user_action_history")
@@ -27,7 +28,7 @@ public class UserActionHistory {
         this.action = action;
         this.endpoint = endpoint;
         this.method = method;
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = LocalDateTime.now(ZoneId.of("Africa/Tunis"));
     }
 
     public Long getId() {

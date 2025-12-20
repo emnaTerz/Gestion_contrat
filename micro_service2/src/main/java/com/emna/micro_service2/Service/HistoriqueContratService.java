@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -26,7 +27,7 @@ public class HistoriqueContratService {
         HistoriqueContrat historique = new HistoriqueContrat();
         historique.setAction(action);
         historique.setUsername(username);
-        historique.setDate(LocalDateTime.now());
+        historique.setDate(LocalDateTime.now(ZoneId.of("Africa/Tunis")));
         historique.setTempsRealisation(tempsRealisation);
 
         historiqueContratRepository.save(historique);

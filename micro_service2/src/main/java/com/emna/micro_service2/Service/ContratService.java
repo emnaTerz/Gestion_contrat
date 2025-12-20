@@ -290,7 +290,7 @@ public class ContratService {
             adherent.setAdresse(aDto.getAdresse());
             adherent.setActivite(aDto.getActivite());
             adherent.setNouveau(aDto.isNouveau());
-            adherentRepository.save(adherent);
+            // adherentRepository.save(adherent);
         }
 
         // 5️⃣ Gestion intelligente des sections - basée sur l'identification
@@ -662,18 +662,6 @@ public class ContratService {
 
         Contrat contrat = contratRepository.findById(numPolice)
                 .orElseThrow(() -> new Exception("Contrat introuvable"));
-
-        // Le propriétaire est celui qui a verrouillé le contrat
-        boolean isOwner = username.equals(contrat.getEditingUser());
-
-        // Autorisation spéciale pour Ismail.Jebari
-        boolean isIsmail = "Ismail.Jebari".equals(username);
-
-        // Vérification des droits
-        if (!isOwner && !isIsmail) {
-            throw new Exception("Vous ne pouvez pas déverrouiller ce contrat. Verrouillé par: " + contrat.getEditingUser());
-        }
-
         // Calcul du temps de réalisation
         long tempsRealisation = (startTime != null)
                 ? java.time.Duration.between(startTime, LocalDateTime.now()).toMillis()
@@ -684,9 +672,6 @@ public class ContratService {
                 : "Fin modification contrat " + contrat.getNumPolice();
 
 
-        if (isIsmail && !isOwner) {
-            action += " (déverrouillé par Ismail)";
-        }
         String user = contrat.getEditingUser();
         historiqueContratService.enregistrerHistorique(action, user, tempsRealisation);
 
