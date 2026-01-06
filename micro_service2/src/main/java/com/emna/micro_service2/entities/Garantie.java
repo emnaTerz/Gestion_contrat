@@ -14,12 +14,13 @@ public class Garantie {
 
     private String libelle;
 
+    private Integer service;
 
     public Garantie() {}
 
-    public Garantie(String libelle) {
+    public Garantie(String libelle, Integer service) {
         this.libelle = libelle;
-
+        this.service = service;
     }
 
     public Long getId() {
@@ -38,5 +39,11 @@ public class Garantie {
         this.libelle = libelle;
     }
 
+    public Integer getService() {
+        return service;
+    }
 
+    public void setService(Integer service) {
+        this.service = service;
+    }
 }

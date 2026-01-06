@@ -7,8 +7,12 @@ public class RcConfigurationResponseDTO {
     private Long id;
     private Double limiteAnnuelleDomCorporels;
     private Double limiteAnnuelleDomMateriels;
-    private Double limiteParSinistre;
+    private Double limiteParSinistreCorporels;
+    private Double limiteParSinistreMateriels;
+
     private Double franchise;
+    private Double maximum;
+    private Double minimum;
     private Double primeNET;
     private String objetDeLaGarantie;
     private List<Long> exclusionsRcIds;
@@ -27,8 +31,37 @@ public class RcConfigurationResponseDTO {
     public Double getLimiteAnnuelleDomMateriels() { return limiteAnnuelleDomMateriels; }
     public void setLimiteAnnuelleDomMateriels(Double limiteAnnuelleDomMateriels) { this.limiteAnnuelleDomMateriels = limiteAnnuelleDomMateriels; }
 
-    public Double getLimiteParSinistre() { return limiteParSinistre; }
-    public void setLimiteParSinistre(Double limiteParSinistre) { this.limiteParSinistre = limiteParSinistre; }
+    public Double getLimiteParSinistreCorporels() {
+        return limiteParSinistreCorporels;
+    }
+
+    public void setLimiteParSinistreCorporels(Double limiteParSinistreCorporels) {
+        this.limiteParSinistreCorporels = limiteParSinistreCorporels;
+    }
+
+    public Double getLimiteParSinistreMateriels() {
+        return limiteParSinistreMateriels;
+    }
+
+    public void setLimiteParSinistreMateriels(Double limiteParSinistreMateriels) {
+        this.limiteParSinistreMateriels = limiteParSinistreMateriels;
+    }
+
+    public Double getMaximum() {
+        return maximum;
+    }
+
+    public void setMaximum(Double maximum) {
+        this.maximum = maximum;
+    }
+
+    public Double getMinimum() {
+        return minimum;
+    }
+
+    public void setMinimum(Double minimum) {
+        this.minimum = minimum;
+    }
 
     public Double getFranchise() { return franchise; }
     public void setFranchise(Double franchise) { this.franchise = franchise; }

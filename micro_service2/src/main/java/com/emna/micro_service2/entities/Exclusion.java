@@ -9,10 +9,7 @@ public class Exclusion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String nom;
-
-    // Relation Many-to-One avec Garantie
     @ManyToOne
     @JoinColumn(name = "garantie_id")
     private Garantie garantie;

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/contrat/catalogue")
@@ -30,10 +31,11 @@ public class CatalogueController {
 
     private final ExclusionsGeneraleService exclusionsService;
 
+    private final ExclusionGlobaleService exclusionGlobaleService;
     private final JwtService jwtService;
     private final HistoriqueContratService historiqueContratService;
     private final ClausierRepository clausierRepository;
-    public CatalogueController(GarantieService garantieService,ClausierRepository clausierRepository,HistoriqueContratService historiqueContratService,JwtService jwtService, SousGarantieService sousGarantieService, ExclusionService exclusionService, ClausierService clausierService, ExclusionRCService exclusionRCService, ExclusionsGeneraleService exclusionsService) {
+    public CatalogueController(GarantieService garantieService,ClausierRepository clausierRepository,ExclusionGlobaleService exclusionGlobaleService,HistoriqueContratService historiqueContratService,JwtService jwtService, SousGarantieService sousGarantieService, ExclusionService exclusionService, ClausierService clausierService, ExclusionRCService exclusionRCService, ExclusionsGeneraleService exclusionsService) {
         this.garantieService = garantieService;
         this.sousGarantieService = sousGarantieService;
         this.exclusionService = exclusionService;
@@ -43,6 +45,7 @@ public class CatalogueController {
         this.jwtService = jwtService;
         this.historiqueContratService=historiqueContratService;
         this.clausierRepository=clausierRepository;
+        this.exclusionGlobaleService=exclusionGlobaleService;
     }
 
     // ---------------- Garanties ----------------
@@ -234,7 +237,7 @@ public class CatalogueController {
 
         // 🔹 Enregistrement de l’historique
         historiqueContratService.enregistrerHistorique(
-                "Création exclusion : " + createdExclusion.getNom(),
+                "Création exclusion : " ,
                 username,
                 0L  // tempsRealisation
         );
@@ -291,7 +294,7 @@ public class CatalogueController {
 
         // 🔹 Enregistrement de l’historique
         historiqueContratService.enregistrerHistorique(
-                "Suppression exclusion : " + exclusion.getNom(),
+                "Suppression exclusion : " ,
                 username,
                 0L  // tempsRealisation
         );
@@ -420,4 +423,63 @@ public class CatalogueController {
             return ResponseEntity.badRequest().body(null);
         }
     }
+    // ---------------- Exclusions Globale ----------------
+    @PostMapping("/exclusion-globale")
+    public ResponseEntity<ExclusionGlobale> createExclusionGlobale(
+            @RequestBody ExclusionGlobale exclusionGlobale,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        String token = null;
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+        }
+        String username = jwtService.extractUserName(token);
+
+        ExclusionGlobale createdExclusion = exclusionGlobaleService.addExclusion(exclusionGlobale);
+
+        historiqueContratService.enregistrerHistorique(
+                "Création exclusion globale : ",
+                username,
+                0L
+        );
+
+        return ResponseEntity.ok(createdExclusion);
+    }
+
+    @GetMapping("/exclusion-globale/branche/{branche}")
+    public ResponseEntity<List<ExclusionGlobale>> getExclusionsByBranche(
+            @PathVariable Branche branche
+    ) {
+        List<ExclusionGlobale> exclusions = exclusionGlobaleService.getExclusionsByBranche(branche);
+        return ResponseEntity.ok(exclusions);
+    }
+
+    // 🔹 Supprimer une exclusion globale par ID (DELETE)
+    @DeleteMapping("/exclusion-globale/{id}")
+    public ResponseEntity<Void> deleteExclusionGlobale(
+            @PathVariable UUID id,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        // 🔹 Récupération du token dans le header
+        String token = null;
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+        }
+
+        // 🔹 Extraction du username depuis le token
+        String username = jwtService.extractUserName(token);
+
+        // 🔹 Suppression de l'exclusion globale
+        exclusionGlobaleService.deleteExclusion(id);
+
+        // 🔹 Enregistrement de l’historique
+        historiqueContratService.enregistrerHistorique(
+                "Suppression exclusion globale ID : " + id,
+                username,
+                0L // tempsRealisation
+        );
+
+        return ResponseEntity.noContent().build();
+    }
+
 }

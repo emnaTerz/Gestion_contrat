@@ -166,9 +166,12 @@ public class ContratService {
                 rc.setObjetDeLaGarantie(rcDTO.getObjetDeLaGarantie());
                 rc.setLimiteAnnuelleDomCorporels(rcDTO.getLimiteAnnuelleDomCorporels() != null ? rcDTO.getLimiteAnnuelleDomCorporels() : 0.0);
                 rc.setLimiteAnnuelleDomMateriels(rcDTO.getLimiteAnnuelleDomMateriels() != null ? rcDTO.getLimiteAnnuelleDomMateriels() : 0.0);
-                rc.setLimiteParSinistre(rcDTO.getLimiteParSinistre() != null ? rcDTO.getLimiteParSinistre() : 0.0);
+                rc.setLimiteParSinistreMateriels(rcDTO.getLimiteParSinistreMateriels() != null ? rcDTO.getLimiteParSinistreMateriels() : 0.0);
+                rc.setLimiteParSinistreCorporels(rcDTO.getLimiteParSinistreCorporels() != null ? rcDTO.getLimiteParSinistreCorporels() : 0.0);
                 rc.setFranchise(rcDTO.getFranchise() != null ? rcDTO.getFranchise() : 0.0);
                 rc.setPrimeNET(rcDTO.getPrimeNET() != null ? rcDTO.getPrimeNET() : 0.0);
+                rc.setMinimum(rcDTO.getMinimum()!= null ? rcDTO.getMinimum() : 0.0);
+                rc.setMaximum(rcDTO.getMaximum() != null ? rcDTO.getMaximum() : 0.0);
                 rc.setContrat(contrat);
 
                 // Exclusions RC
@@ -278,7 +281,7 @@ public class ContratService {
         contratRepository.save(contrat);
 
         // 4️⃣ Mettre à jour l'adhérent
-        AdherentDTO aDto = dto.getAdherent();
+     /*   AdherentDTO aDto = dto.getAdherent();
         if (aDto != null) {
             Adherent adherent = contrat.getAdherent();
             if (adherent == null) {
@@ -291,7 +294,35 @@ public class ContratService {
             adherent.setActivite(aDto.getActivite());
             adherent.setNouveau(aDto.isNouveau());
             // adherentRepository.save(adherent);
+        }*/
+
+        // 4️⃣ Mise à jour de l'adhérent — VERSION SAFE 100%
+        // 4️⃣ Mise à jour de l’adhérent — SANS RESTRICTION
+        AdherentDTO aDto = dto.getAdherent();
+
+        if (aDto != null) {
+
+            Adherent adherent = contrat.getAdherent();
+
+            // ⚠️ IMPORTANT : ne jamais créer un nouvel objet si l’ID existe
+            if (adherent == null) {
+                if (aDto.getCodeId() != null) {
+                    adherent = adherentRepository.getReferenceById(aDto.getCodeId());
+                } else {
+                    adherent = new Adherent();
+                }
+                contrat.setAdherent(adherent);
+            }
+            // Mise à jour simple (Hibernate gère tout)
+            adherent.setCodeId(aDto.getCodeId());
+            adherent.setNomRaison(aDto.getNomRaison());
+            adherent.setAdresse(aDto.getAdresse());
+            adherent.setActivite(aDto.getActivite());
+            adherent.setNouveau(aDto.isNouveau());
         }
+
+
+
 
         // 5️⃣ Gestion intelligente des sections - basée sur l'identification
         List<Section> sectionsExistantes = sectionRepository.findByContrat_NumPolice(contrat.getNumPolice());
@@ -409,8 +440,11 @@ public class ContratService {
             rc.setObjetDeLaGarantie(rcConfig.getObjetDeLaGarantie());
             rc.setLimiteAnnuelleDomCorporels(rcConfig.getLimiteAnnuelleDomCorporels());
             rc.setLimiteAnnuelleDomMateriels(rcConfig.getLimiteAnnuelleDomMateriels());
-            rc.setLimiteParSinistre(rcConfig.getLimiteParSinistre());
+            rc.setLimiteParSinistreCorporels(rcConfig.getLimiteParSinistreCorporels());
+            rc.setLimiteParSinistreMateriels(rcConfig.getLimiteParSinistreMateriels());
             rc.setFranchise(rcConfig.getFranchise());
+            rc.setMaximum(rcConfig.getMaximum());
+            rc.setMinimum(rcConfig.getMinimum());
             rc.setPrimeNET(rcConfig.getPrimeNET());
 
             rcExploitationRepository.save(rc);
@@ -819,10 +853,13 @@ public class ContratService {
             rcConfigDTO.setId(rc.getId());
             rcConfigDTO.setLimiteAnnuelleDomCorporels(rc.getLimiteAnnuelleDomCorporels());
             rcConfigDTO.setLimiteAnnuelleDomMateriels(rc.getLimiteAnnuelleDomMateriels());
-            rcConfigDTO.setLimiteParSinistre(rc.getLimiteParSinistre());
+            rcConfigDTO.setLimiteParSinistreCorporels(rc.getLimiteParSinistreCorporels());
+            rcConfigDTO.setLimiteParSinistreMateriels(rc.getLimiteParSinistreMateriels());
             rcConfigDTO.setFranchise(rc.getFranchise());
             rcConfigDTO.setPrimeNET(rc.getPrimeNET());
             rcConfigDTO.setObjetDeLaGarantie(rc.getObjetDeLaGarantie());
+            rcConfigDTO.setMaximum(rc.getMaximum());
+            rcConfigDTO.setMinimum(rc.getMinimum());
 
             // IDs des exclusions RC
             List<Long> exclusionIds = new ArrayList<>();

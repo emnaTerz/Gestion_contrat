@@ -6,8 +6,12 @@ public class RcConfigurationDTO {
     private Long id;
     private Double limiteAnnuelleDomCorporels;
     private Double limiteAnnuelleDomMateriels;
-    private Double limiteParSinistre;
+    private Double limiteParSinistreCorporels;
+    private Double limiteParSinistreMateriels;
+
     private Double franchise;
+    private Double maximum;
+    private Double minimum;
     private Double primeNET;
     private String objetDeLaGarantie;
     private List<Long> exclusionsRcIds;
@@ -15,17 +19,22 @@ public class RcConfigurationDTO {
     private List<String> sectionIdentifications; // Noms des sections pour l'affichage
 
 
-    public RcConfigurationDTO(Long id, Double limiteAnnuelleDomCorporels, Double limiteAnnuelleDomMateriels, Double limiteParSinistre, Double franchise, Double primeNET, String objetDeLaGarantie, List<Long> exclusionsRcIds, List<Long> sectionIds) {
+    public RcConfigurationDTO(Long id, Double limiteAnnuelleDomCorporels, Double limiteAnnuelleDomMateriels, Double limiteParSinistreCorporels, Double limiteParSinistreMateriels, Double franchise, Double maximum, Double minimum, Double primeNET, String objetDeLaGarantie, List<Long> exclusionsRcIds, List<Long> sectionIds) {
         this.id = id;
         this.limiteAnnuelleDomCorporels = limiteAnnuelleDomCorporels;
         this.limiteAnnuelleDomMateriels = limiteAnnuelleDomMateriels;
-        this.limiteParSinistre = limiteParSinistre;
+        this.limiteParSinistreCorporels = limiteParSinistreCorporels;
+        this.limiteParSinistreMateriels = limiteParSinistreMateriels;
         this.franchise = franchise;
+        this.maximum = maximum;
+        this.minimum = minimum;
         this.primeNET = primeNET;
         this.objetDeLaGarantie = objetDeLaGarantie;
         this.exclusionsRcIds = exclusionsRcIds;
         this.sectionIds = sectionIds;
     }
+
+
 
     public Long getId() {
         return id;
@@ -63,12 +72,36 @@ public class RcConfigurationDTO {
         this.limiteAnnuelleDomMateriels = limiteAnnuelleDomMateriels;
     }
 
-    public Double getLimiteParSinistre() {
-        return limiteParSinistre;
+    public Double getLimiteParSinistreCorporels() {
+        return limiteParSinistreCorporels;
     }
 
-    public void setLimiteParSinistre(Double limiteParSinistre) {
-        this.limiteParSinistre = limiteParSinistre;
+    public void setLimiteParSinistreCorporels(Double limiteParSinistreCorporels) {
+        this.limiteParSinistreCorporels = limiteParSinistreCorporels;
+    }
+
+    public Double getLimiteParSinistreMateriels() {
+        return limiteParSinistreMateriels;
+    }
+
+    public void setLimiteParSinistreMateriels(Double limiteParSinistreMateriels) {
+        this.limiteParSinistreMateriels = limiteParSinistreMateriels;
+    }
+
+    public Double getMaximum() {
+        return maximum;
+    }
+
+    public void setMaximum(Double maximum) {
+        this.maximum = maximum;
+    }
+
+    public Double getMinimum() {
+        return minimum;
+    }
+
+    public void setMinimum(Double minimum) {
+        this.minimum = minimum;
     }
 
     public Double getFranchise() {

@@ -9,7 +9,7 @@ public class Extension {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String numPolice; // ou idContrat selon ce que tu préfères
+    private String numPolice;
     private String titre;
     @Lob
     private String texte;
