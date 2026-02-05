@@ -16,9 +16,10 @@ public class ExclusionGlobale {
     @Column(nullable = false)
     private Branche branche;
 
-    @Lob
-    @Column(nullable = false)
+
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String libelle;
+
 
     private Integer service;
 

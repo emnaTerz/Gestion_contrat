@@ -1,23 +1,21 @@
 package com.emna.micro_service2.entities;
 
-
-import com.emna.micro_service1.entities.Branche;
-import com.emna.micro_service2.entities.enums.CodeRenouvellement;
-import com.emna.micro_service2.entities.enums.Fractionnement;
-import com.emna.micro_service2.entities.enums.TypeContrat;
-import com.emna.micro_service2.entities.enums.TypeFranchise;
+import com.emna.micro_service2.entities.enums.*;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "contrat_q")
 public class ContratQ {
 
+    /* ===== Identifiant ===== */
     @Id
     @Column(name = "numPolice", unique = true, nullable = false)
     private String numPolice;
 
+    /* ===== Informations générales ===== */
     @Enumerated(EnumType.STRING)
     private Branche branche;
 
@@ -30,21 +28,15 @@ public class ContratQ {
 
     private String status;
 
-    private double primeTTC;
-
-    private double primeNET;
-
-    private LocalDate dateDebut;
-
-    private LocalDate dateFin;
-
     private LocalDate dateCreation;
 
     private LocalDate dateModif;
 
     private String editingUser;
 
-    private LocalDateTime editingStart;
+    private LocalDate dateDebut;
+
+    private LocalDate dateFin;
 
     private String nature;
 
@@ -54,42 +46,38 @@ public class ContratQ {
     @Enumerated(EnumType.STRING)
     private CodeRenouvellement codeRenouvellement;
 
-    @Column(name = "num_adherent")
-    private String numAdherent;
+    /* ===== Relations ===== */
+    @ManyToOne(cascade = CascadeType.MERGE)
+    @JoinColumn(name = "adherent_id")
+    private Adherent adherent;
 
-    /* Franchise */
+    @ManyToMany
+    @JoinTable(
+            name = "contrat_exclusion",
+            joinColumns = @JoinColumn(name = "contrat_id"),
+            inverseJoinColumns = @JoinColumn(name = "exclusion_id")
+    )
+    private List<ExclusionGlobale> exclusionsGlobales;
+
+
+
+
+    /* ===== Dates supplémentaires ===== */
+    private LocalDateTime creationDate;
+    private LocalDate dateOffre;
+
+    /* ===== Franchise ===== */
     @Enumerated(EnumType.STRING)
-    private TypeFranchise franchise;
-    // ABSOLUE, SUR_DOMMAGE, INEXISTANTE
+    private TypeFranchise franchise; // ABSOLUE, SUR_DOMMAGE, INEXISTANTE
 
     private Double taux;
-
     private Double min;
-
     private Double max;
 
-    @Column(name = "nouveau")
-    private boolean nouveau;
-
-    private boolean leasing;
-
-    private String compagnieLeasing;
-
-    @Lob
-    @Column(columnDefinition = "TEXT")
-    private String objetContrat;
-
-    @Lob
-    @Column(columnDefinition = "TEXT")
-    private String etendueGarantie;
-
-    /* ===== Constructors ===== */
-
-    public ContratQ() {
-    }
+    /* ===== Constructeurs ===== */
+    public ContratQ() {}
 
     /* ===== Getters & Setters ===== */
-
     public String getNumPolice() {
         return numPolice;
     }
@@ -138,38 +126,6 @@ public class ContratQ {
         this.status = status;
     }
 
-    public double getPrimeTTC() {
-        return primeTTC;
-    }
-
-    public void setPrimeTTC(double primeTTC) {
-        this.primeTTC = primeTTC;
-    }
-
-    public double getPrimeNET() {
-        return primeNET;
-    }
-
-    public void setPrimeNET(double primeNET) {
-        this.primeNET = primeNET;
-    }
-
-    public LocalDate getDateDebut() {
-        return dateDebut;
-    }
-
-    public void setDateDebut(LocalDate dateDebut) {
-        this.dateDebut = dateDebut;
-    }
-
-    public LocalDate getDateFin() {
-        return dateFin;
-    }
-
-    public void setDateFin(LocalDate dateFin) {
-        this.dateFin = dateFin;
-    }
-
     public LocalDate getDateCreation() {
         return dateCreation;
     }
@@ -194,12 +150,20 @@ public class ContratQ {
         this.editingUser = editingUser;
     }
 
-    public LocalDateTime getEditingStart() {
-        return editingStart;
+    public LocalDate getDateDebut() {
+        return dateDebut;
     }
 
-    public void setEditingStart(LocalDateTime editingStart) {
-        this.editingStart = editingStart;
+    public void setDateDebut(LocalDate dateDebut) {
+        this.dateDebut = dateDebut;
+    }
+
+    public LocalDate getDateFin() {
+        return dateFin;
+    }
+
+    public void setDateFin(LocalDate dateFin) {
+        this.dateFin = dateFin;
     }
 
     public String getNature() {
@@ -226,12 +190,37 @@ public class ContratQ {
         this.codeRenouvellement = codeRenouvellement;
     }
 
-    public String getNumAdherent() {
-        return numAdherent;
+    public Adherent getAdherent() {
+        return adherent;
     }
 
-    public void setNumAdherent(String numAdherent) {
-        this.numAdherent = numAdherent;
+    public void setAdherent(Adherent adherent) {
+        this.adherent = adherent;
+    }
+
+    public List<ExclusionGlobale> getExclusionsGlobales() {
+        return exclusionsGlobales;
+    }
+
+    public void setExclusionsGlobales(List<ExclusionGlobale> exclusionsGlobales) {
+        this.exclusionsGlobales = exclusionsGlobales;
+    }
+
+
+    public LocalDateTime getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(LocalDateTime creationDate) {
+        this.creationDate = creationDate;
+    }
+
+    public LocalDate getDateOffre() {
+        return dateOffre;
+    }
+
+    public void setDateOffre(LocalDate dateOffre) {
+        this.dateOffre = dateOffre;
     }
 
     public TypeFranchise getFranchise() {
@@ -265,45 +254,4 @@ public class ContratQ {
     public void setMax(Double max) {
         this.max = max;
     }
-
-    public boolean isNouveau() {
-        return nouveau;
-    }
-
-    public void setNouveau(boolean nouveau) {
-        this.nouveau = nouveau;
-    }
-
-    public boolean isLeasing() {
-        return leasing;
-    }
-
-    public void setLeasing(boolean leasing) {
-        this.leasing = leasing;
-    }
-
-    public String getCompagnieLeasing() {
-        return compagnieLeasing;
-    }
-
-    public void setCompagnieLeasing(String compagnieLeasing) {
-        this.compagnieLeasing = compagnieLeasing;
-    }
-
-    public String getObjetContrat() {
-        return objetContrat;
-    }
-
-    public void setObjetContrat(String objetContrat) {
-        this.objetContrat = objetContrat;
-    }
-
-    public String getEtendueGarantie() {
-        return etendueGarantie;
-    }
-
-    public void setEtendueGarantie(String etendueGarantie) {
-        this.etendueGarantie = etendueGarantie;
-    }
 }
-

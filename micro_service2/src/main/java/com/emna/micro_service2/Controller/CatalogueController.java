@@ -7,14 +7,19 @@ package com.emna.micro_service2.Controller;
 import com.emna.jwt_service.Service.JwtService;
 import com.emna.micro_service2.Repository.ClausierRepository;
 import com.emna.micro_service2.Service.*;
+import com.emna.micro_service2.dto.ClauseGarantieDTO;
 import com.emna.micro_service2.dto.ExclusionRCRequest;
 import com.emna.micro_service2.dto.ExclusionsRequestDTO;
 import com.emna.micro_service2.entities.*;
 import com.emna.micro_service2.entities.enums.Branche;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,24 +33,26 @@ public class CatalogueController {
     private final ExclusionService exclusionService;
     private final ClausierService clausierService;
     private final ExclusionRCService exclusionRCService;
-
+    private final ClauseGarantieService clauseGarantieService;
     private final ExclusionsGeneraleService exclusionsService;
 
     private final ExclusionGlobaleService exclusionGlobaleService;
     private final JwtService jwtService;
     private final HistoriqueContratService historiqueContratService;
     private final ClausierRepository clausierRepository;
-    public CatalogueController(GarantieService garantieService,ClausierRepository clausierRepository,ExclusionGlobaleService exclusionGlobaleService,HistoriqueContratService historiqueContratService,JwtService jwtService, SousGarantieService sousGarantieService, ExclusionService exclusionService, ClausierService clausierService, ExclusionRCService exclusionRCService, ExclusionsGeneraleService exclusionsService) {
+
+    public CatalogueController(GarantieService garantieService, SousGarantieService sousGarantieService, ExclusionService exclusionService, ClausierService clausierService, ExclusionRCService exclusionRCService, ClauseGarantieService clauseGarantieService, ExclusionsGeneraleService exclusionsService, ExclusionGlobaleService exclusionGlobaleService, JwtService jwtService, HistoriqueContratService historiqueContratService, ClausierRepository clausierRepository) {
         this.garantieService = garantieService;
         this.sousGarantieService = sousGarantieService;
         this.exclusionService = exclusionService;
         this.clausierService = clausierService;
         this.exclusionRCService = exclusionRCService;
+        this.clauseGarantieService = clauseGarantieService;
         this.exclusionsService = exclusionsService;
+        this.exclusionGlobaleService = exclusionGlobaleService;
         this.jwtService = jwtService;
-        this.historiqueContratService=historiqueContratService;
-        this.clausierRepository=clausierRepository;
-        this.exclusionGlobaleService=exclusionGlobaleService;
+        this.historiqueContratService = historiqueContratService;
+        this.clausierRepository = clausierRepository;
     }
 
     // ---------------- Garanties ----------------
@@ -477,6 +484,126 @@ public class CatalogueController {
                 "Suppression exclusion globale ID : " + id,
                 username,
                 0L // tempsRealisation
+        );
+
+        return ResponseEntity.noContent().build();
+    }
+    // ---------------- Clauses Garantie ----------------
+    @PostMapping("/clause-garantie")
+    public ResponseEntity<ClauseGarantie> createClauseGarantie(
+            @RequestParam("titre") String titre,
+            @RequestParam("sousGarantieId") Long sousGarantieId,
+            @RequestParam(value = "pdf", required = false) MultipartFile pdf,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) throws IOException {
+        String token = null;
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+        }
+        String username = jwtService.extractUserName(token);
+
+        ClauseGarantie clause = new ClauseGarantie();
+        clause.setTitre(titre);
+
+        // Récupération de la sous-garantie depuis l'ID
+        SousGarantie sousGarantie = sousGarantieService.getById(sousGarantieId)
+                .orElseThrow(() -> new RuntimeException("Sous-garantie non trouvée"));
+
+        clause.setSousGarantie(sousGarantie);
+
+        // gérer le PDF si présent
+        if (pdf != null && !pdf.isEmpty()) {
+            clause.setPdf(pdf.getBytes()); // ou sauvegarde dans un fichier
+        }
+
+        ClauseGarantie savedClause = clauseGarantieService.addClause(clause);
+
+        historiqueContratService.enregistrerHistorique(
+                "Création clause garantie : " + savedClause.getTitre(),
+                username,
+                0L
+        );
+
+        return ResponseEntity.ok(savedClause);
+    }
+
+
+    @GetMapping("/clause-garantie/sous-garantie/{sousGarantieId}")
+    public ResponseEntity<List<ClauseGarantieDTO>> getClausesBySousGarantie(
+            @PathVariable Long sousGarantieId,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        String token = null;
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+        }
+        String username = jwtService.extractUserName(token);
+
+        SousGarantie sousGarantie = sousGarantieService.getById(sousGarantieId)
+                .orElseThrow(() -> new RuntimeException("Sous-garantie non trouvée avec ID : " + sousGarantieId));
+
+        // ✅ Transaction active, on récupère le PDF
+        List<ClauseGarantie> clauses = clauseGarantieService.getClausesBySousGarantie(sousGarantie);
+
+        // Historique
+        historiqueContratService.enregistrerHistorique(
+                "Consultation des clauses de la sous-garantie : " + sousGarantie.getNom() + " (ID = " + sousGarantieId + ")",
+                username,
+                0L
+        );
+
+        // Mapping vers DTO pour Angular
+        List<ClauseGarantieDTO> dtoList = clauses.stream()
+                .map(ClauseGarantieDTO::new)
+                .toList();
+
+        return ResponseEntity.ok(dtoList);
+    }
+
+
+    @GetMapping("/clause-garantie/{id}/pdf")
+    public ResponseEntity<byte[]> downloadClausePdf(@PathVariable Long id) {
+        ClauseGarantie clause = clauseGarantieService.getClauseById(id)
+                .orElseThrow(() -> new RuntimeException("Clause non trouvée"));
+
+        byte[] pdfBytes = clause.getPdf();
+        if (pdfBytes == null || pdfBytes.length == 0) {
+            throw new RuntimeException("PDF non disponible");
+        }
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + clause.getTitre() + ".pdf\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
+
+
+    @DeleteMapping("/clause-garantie/{id}")
+    public ResponseEntity<Void> deleteClauseGarantie(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        // 🔹 Récupération du token
+        String token = null;
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+        }
+
+        // 🔹 Extraction du username
+        String username = jwtService.extractUserName(token);
+
+        // 🔹 Récupération de la clause avant suppression pour l’historique
+        ClauseGarantie clause = clauseGarantieService.getClauseById(id)
+                .orElseThrow(() -> new RuntimeException("Clause non trouvée avec ID : " + id));
+
+        // 🔹 Suppression
+        clauseGarantieService.delete(id);
+
+        // 🔹 Historique
+        historiqueContratService.enregistrerHistorique(
+                "Suppression clause garantie : " + clause.getTitre() + " (ID = " + id + ")",
+                username,
+                0L
         );
 
         return ResponseEntity.noContent().build();
